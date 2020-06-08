@@ -1,0 +1,6 @@
+{
+	"pooling": {
+		"dropout": 0,
+		"hidden_act": "gelu"
+	}
+}

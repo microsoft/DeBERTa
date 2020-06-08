@@ -1,0 +1,13 @@
+nltk
+spacy
+numpy
+pytest
+regex
+scipy
+sklearn
+torch==1.3.0
+torchvision==0.3.0
+tqdm
+ujson
+seqeval
+psutil
