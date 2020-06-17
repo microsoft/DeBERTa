@@ -20,6 +20,8 @@ Our pre-trained models are packaged into zipped files. You can download them fro
 
 # Try the code
 
+Read our [documentation](https://deberta.readthedocs.io/en/latest/)
+
 ## Requirements
 - Linux system, e.g. Ubuntu 18.04LTS
 - CUDA 10.0
@@ -77,6 +79,23 @@ class MyModel(torch.nn.Module):
 # 2. Change your tokenizer with the the tokenizer built in DeBERta
 from DeBERTa import deberta
 tokenizer = deberta.GPT2Tokenizer()
+# We apply the same schema of special tokens as BERT, e.g. [CLS], [SEP], [MASK]
+max_seq_len = 512
+tokens = tokenizer.tokenize('Examples input text of DeBERTa')
+# Truncate long sequence
+tokens = tokens[:max_seq_len]
+# Add special tokens to the `tokens`
+tokens = ['[CLS]'] + tokens + ['[SEP]']
+input_ids = tokenizer.convert_tokens_to_ids(tokens)
+input_mask = [1]*len(input_ids)
+# padding
+paddings = max_seq_len-len(input_ids)
+input_ids = input_ids + [0]*paddings
+input_mask = input_mask + [0]*paddings
+features = {
+'input_ids': torch.tensor(input_ids, dtype=torch.int),
+'input_mask': torch.tensor(input_mask, dtype=torch.int)
+}
 
 ```
 

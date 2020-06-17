@@ -19,6 +19,22 @@ from .ops import *
 __all__=['build_relative_position', 'DisentangledSelfAttention']
 
 def build_relative_position(query_size, key_size):
+    """ Build relative position according to the query and key
+
+    We assume the absolute position of query :math:`P_q` is range from (0, query_size) and the absolute position of key :math:`P_k` is range from (0, key_size),
+    The relative positions from query to key is
+    
+    :math:`R_{q \\rightarrow k} = P_q - P_k`
+
+    Args:
+        query_size (int): the length of query
+        key_size (int): the length of key
+
+    Return:
+        :obj:`torch.LongTensor`: A tensor with shape [1, query_size, key_size]
+
+    """
+
     q_ids = np.arange(0, query_size)
     k_ids = np.arange(0, key_size)
     rel_pos_ids = q_ids[:, None] - np.tile(k_ids, (q_ids.shape[0],1))
@@ -27,8 +43,15 @@ def build_relative_position(query_size, key_size):
     rel_pos_ids = rel_pos_ids.unsqueeze(0)
     return rel_pos_ids
 
-
 class DisentangledSelfAttention(torch.nn.Module):
+    """ Disentangled self-attention module
+
+    Parameters:
+        config (:obj:`str`):
+            A model config class instance with the configuration to build a new model. The schema is similar to `BertConfig`, \
+            for more details, please refer :class:`~DeBERTa.deberta.ModelConfig`
+
+    """
     def __init__(self, config):
         super().__init__()
         if config.hidden_size % config.num_attention_heads != 0:
@@ -69,6 +92,29 @@ class DisentangledSelfAttention(torch.nn.Module):
         return x.permute(0, 2, 1, 3)
 
     def forward(self, hidden_states, attention_mask, return_att=False, query_states=None, relative_pos=None, rel_embeddings=None):
+        """  Call the module
+
+        Args:
+            hidden_states (:obj:`torch.FloatTensor`):
+                Input states to the module usally the output from previous layer, it will be the Q,K and V in `Attention(Q,K,V)`
+
+            attention_mask (:obj:`torch.ByteTensor`):
+                An attention mask matrix of shape [`B`, `N`, `N`] where `B` is the batch size, `N` is the maxium sequence length in which element [i,j] = `1` means the `i` th token in the input can attend to the `j` th token.
+
+            return_att (:obj:`bool`, optional):
+                Whether return the attention maxitrix.
+
+            query_states (:obj:`torch.FloatTensor`, optional):
+                The `Q` state in `Attention(Q,K,V)`.
+
+            relative_pos (:obj:`torch.LongTensor`):
+                The relative position encoding between the tokens in the sequence. It's of shape [`B`, `N`, `N`] with values ranging in [`-max_relative_positions`, `max_relative_positions`].
+
+            rel_embeddings (:obj:`torch.FloatTensor`):
+                The embedding of relative distances. It's a tensor of shape [:math:`2 \\times \\text{max_relative_positions}`, `hidden_size`].
+
+
+        """
         if query_states is None:
             qp = self.in_proj(hidden_states) #.split(self.all_head_size, dim=-1)
             query_layer,key_layer,value_layer = self.transpose_for_scores(qp).chunk(3, dim=-1)

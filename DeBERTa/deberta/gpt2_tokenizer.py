@@ -19,6 +19,32 @@ from .cache_utils import load_vocab
 __all__ = ['GPT2Tokenizer']
 
 class GPT2Tokenizer(object):
+  """ A wrapper of GPT2 tokenizer with similar interface as BERT tokenizer
+
+  Args:
+    
+    vocab_file (:obj:`str`, optional):
+      The local path of vocabulary package or the release name of vocabulary in `DeBERTa GitHub releases <https://github.com/microsoft/DeBERTa/releases>`_, \
+          e.g. "bpe_encoder", default: `None`. 
+          
+          If it's `None`, then it will download the vocabulary in the latest release from GitHub. The vocabulary file is a \
+          state dictionary with three items, "dict_map", "vocab", "encoder" which correspond to three files used in `RoBERTa`, i.e. `dict.txt`, `vocab.txt` and `encoder.json`. \
+          
+          The difference between our wrapped GPT2 tokenizer and RoBERTa wrapped tokenizer are,
+
+          - Special tokens, unlike `RoBERTa` which use `<s>`, `</s>` as the `start` token and `end` token of a sentence. We use `[CLS]` and `[SEP]` as the `start` and `end`\
+              token of input sentence which is the same as `BERT`.
+
+          - We remapped the token ids in our dictionary with regarding to the new special tokens, `[PAD]` => 0, `[CLS]` => 1, `[SEP]` => 2, `[UNK]` => 3, `[MASK]` => 50264
+
+    do_lower_case (:obj:`bool`, optional):
+      Whether to convert inputs to lower case. **Not used in GPT2 tokenizer**.
+
+    special_tokens (:obj:`list`, optional):
+      List of special tokens to be added to the end of the vocabulary.
+
+
+  """
   def __init__(self, vocab_file=None, do_lower_case=True, special_tokens=None):
     pad='[PAD]'
     eos='[SEP]'
@@ -48,14 +74,54 @@ class GPT2Tokenizer(object):
     self.ids_to_tokens = self.symbols
 
   def tokenize(self, text):
+    """ Convert an input text to tokens.
+      
+      Args:
+        
+        text (:obj:`str`): input text to be tokenized.
+
+      Returns:
+        A list of byte tokens where each token represent the byte id in GPT2 byte dictionary
+
+      Example::
+        
+        >>> tokenizer = GPT2Tokenizer()
+        >>> text = "Hello world!"
+        >>> tokens = tokenizer.tokenize(text)
+        >>> print(tokens)
+        ['15496', '995', '0']
+        
+    """
     bpe = self._encode(text)
 
     return [t for t in bpe.split(' ') if t]
 
   def convert_tokens_to_ids(self, tokens):
+    """ Convert list of tokens to ids.
+      
+      Args:
+
+        tokens (:obj:`list<str>`): list of tokens
+
+      Returns:
+        
+        List of ids
+    """
+
     return [self.vocab[t] for t in tokens]
 
   def convert_ids_to_tokens(self, ids):
+    """ Convert list of ids to tokens.
+      
+      Args:
+
+        ids (:obj:`list<int>`): list of ids
+
+      Returns:
+        
+        List of tokens
+    """
+
     tokens = []
     for i in ids:
       tokens.append(self.ids_to_tokens[i])
@@ -65,9 +131,40 @@ class GPT2Tokenizer(object):
     return self.bpe.split_to_words(text)
 
   def decode(self, tokens):
+    """ Decode list of tokens to text strings.
+    
+      Args:
+        
+        tokens (:obj:`list<str>`): list of tokens.
+
+      Returns:
+        
+        Text string corresponds to the input tokens.
+
+      Example::
+        
+        >>> tokenizer = GPT2Tokenizer()
+        >>> text = "Hello world!"
+        >>> tokens = tokenizer.tokenize(text)
+        >>> print(tokens)
+        ['15496', '995', '0']
+        
+        >>> tokenizer.decode(tokens)
+        'Hello world!'
+      
+    """
     return self.bpe.decode([int(t) for t in tokens if t not in self.special_tokens])
 
   def add_special_token(self, token):
+    """Adds a special token to the dictionary.
+    
+      Args:
+        token (:obj:`str`): Tthe new token/word to be added to the vocabulary.
+
+      Returns:
+        The id of new token in the vocabulary.
+
+    """
     self.special_tokens.append(token)
     return self.add_symbol(token)
 
@@ -93,7 +190,16 @@ class GPT2Tokenizer(object):
     return self.bpe.decode(map(int, x.split()))
 
   def add_symbol(self, word, n=1):
-    """Adds a word to the dictionary"""
+    """Adds a word to the dictionary.
+    
+      Args:
+        word (:obj:`str`): Tthe new token/word to be added to the vocabulary.
+        n (int, optional): The frequency of the word.
+
+      Returns:
+        The id of the new word.
+
+    """
     if word in self.indices:
       idx = self.indices[word]
       self.count[idx] = self.count[idx] + n

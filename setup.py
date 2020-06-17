@@ -16,12 +16,17 @@ with open('VERSION') as fs:
 with open('requirements.txt') as fs:
   requirements = [l.strip() for l in fs]
 
+extras = {}
+extras["docs"] = ["recommonmark", "sphinx", "sphinx-markdown-tables", "sphinx-rtd-theme"]
+
 setuptools.setup(
     name="DeBERTa",
     version=version,
     author="penhe",
     author_email="penhe@microsoft.com",
     description="Decoding enhanced BERT with Disentangled Attention",
+    keywords="NLP deep learning transformer pytorch Attention BERT RoBERTa DeBERTa",
+    license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/microsoft/DeBERTa",
@@ -33,4 +38,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    extras_require=extras,
     install_requires=requirements)
