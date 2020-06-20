@@ -19,8 +19,31 @@ else:
 __all__ = ['StableDropout', 'MaskedLayerNorm', 'XSoftmax']
 
 class XSoftmax(torch.autograd.Function):
+  """ Masked Softmax which is optimized for saving memory
+
+  Args:
+      
+    input (:obj:`torch.tensor`): The input tensor that will apply softmax.
+    mask (:obj:`torch.IntTensor`): The mask matrix where 0 indicate that element will be ignored in the softmax caculation.
+    dim (int): The dimenssion that will apply softmax.
+    
+  Example::
+
+    import torch
+    from DeBERTa.deberta import XSoftmax
+    # Make a tensor
+    x = torch.randn([4,20,100])
+    # Create a mask
+    mask = (x>0).int()
+    y = XSoftmax.apply(x, mask, dim=-1)
+      
+  """
+
   @staticmethod
   def forward(self, input, mask, dim):
+    """
+    """
+
     self.dim = dim
     if version.Version(torch.__version__) >= version.Version('1.2.0a'):
       rmask = (1-mask).bool()
@@ -35,6 +58,9 @@ class XSoftmax(torch.autograd.Function):
 
   @staticmethod
   def backward(self, grad_output):
+    """
+    """
+
     output, = self.saved_tensors
     inputGrad = _softmax_backward_data(grad_output, output, self.dim, output)
     return inputGrad, None, None
@@ -88,6 +114,14 @@ class XDropout(torch.autograd.Function):
     return mask, dropout
 
 class StableDropout(torch.nn.Module):
+  """ Optimized dropout module for stabilizing the training
+
+  Args:
+
+    drop_prob (float): the dropout probabilities
+
+  """
+
   def __init__(self, drop_prob):
     super().__init__()
     self.drop_prob = drop_prob
@@ -95,6 +129,14 @@ class StableDropout(torch.nn.Module):
     self.context_stack = None
 
   def forward(self, x):
+    """ Call the module
+
+    Args:
+      
+      x (:obj:`torch.tensor`): The input tensor to apply dropout
+
+
+    """
     if self.training and self.drop_prob>0:
       return XDropout.apply(x, self.get_context())
     return x
@@ -123,6 +165,22 @@ class StableDropout(torch.nn.Module):
       return self.drop_prob
 
 def MaskedLayerNorm(layerNorm, input, mask = None):
+  """ Masked LayerNorm which will apply mask over the output of LayerNorm to avoid inaccurate updatings to the LayerNorm module.
+  
+  Args:
+    layernorm (:obj:`~DeBERTa.deberta.BertLayerNorm`): LayerNorm module or function
+    input (:obj:`torch.tensor`): The input tensor
+    mask (:obj:`torch.IntTensor`): The mask to applied on the output of LayerNorm where `0` indicate the output of that element will be ignored, i.e. set to `0`
+
+  Example::
+
+    # Create a tensor b x n x d
+    x = torch.randn([1,10,100])
+    m = torch.tensor([[1,1,1,0,0,0,0,0,0,0]], dtype=torch.int)
+    LayerNorm = DeBERTa.deberta.BertLayerNorm(100)
+    y = MaskedLayerNorm(LayerNorm, x, m)
+
+  """
   output = layerNorm(input).to(input)
   if mask is None:
     return output

@@ -111,7 +111,7 @@ fi
 parameters="--task_name $Task $CMD \
   --data_dir $Data \
   --init_model $MODEL \
-  --bert_config $OUTPUT/model_config.json \
+  --model_config $OUTPUT/model_config.json \
   --max_seq_length 512 \
   --eval_batch_size 128 \
   --predict_batch_size 128 \
