@@ -39,9 +39,10 @@ def linear_act(x):
 ACT2FN = {"gelu": gelu, "relu": torch.nn.functional.relu, "swish": swish, "tanh": torch.nn.functional.tanh, "linear": linear_act, 'sigmoid': torch.sigmoid}
 
 class BertLayerNorm(nn.Module):
+  """LayerNorm module in the TF style (epsilon inside the square root).
+  """
+
   def __init__(self, size, eps=1e-12):
-    """Construct a layernorm module in the TF style (epsilon inside the square root).
-    """
     super().__init__()
     self.weight = nn.Parameter(torch.ones(size))
     self.bias = nn.Parameter(torch.zeros(size))
@@ -139,6 +140,8 @@ class BertLayer(nn.Module):
       return layer_output
 
 class BertEncoder(nn.Module):
+  """ Modified BertEncoder with relative position bias support
+  """
   def __init__(self, config):
     super().__init__()
     layer = BertLayer(config)

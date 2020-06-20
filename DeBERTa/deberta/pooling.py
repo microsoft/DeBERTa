@@ -12,17 +12,49 @@ import json
 from .bert import ACT2FN
 from .ops import StableDropout
 
+__all__ = ['PoolConfig', 'ContextPooler']
+
 class PoolConfig(object):
-    """Configuration class to store the configuration of `attention pool layer`.
+    """Configuration class to store the configuration of `pool layer`.
+
+        Parameters:
+        
+            config (:class:`~DeBERTa.deberta.ModelConfig`): The model config. The field of pool config will be initalized with the `pooling` field in model config.
+
+        Attributes:
+
+            hidden_size (int): Size of the encoder layers and the pooler layer, default: `768`.
+
+            dropout (float): The dropout rate applied on the output of `[CLS]` token,
+
+            hidden_act (:obj:`str`): The activation function of the projection layer, it can be one of ['gelu', 'tanh'].
+
+        Example::
+
+            # Here is the content of an exmple model config file in json format
+
+                {
+                  "hidden_size": 768,
+                  "num_hidden_layers" 12,
+                  "num_attention_heads": 12,
+                  "intermediate_size": 3072,
+                  ...
+                  "pooling": {
+                    "hidden_size":  768,
+                    "hidden_act": "gelu",
+                    "dropout": 0.1
+                  }
+                }
+
     """
-    def __init__(self, model_config):
+    def __init__(self, config):
         """Constructs PoolConfig.
 
-        Params:
-           `model_config`: the config of the model. The field of pool config will be initalized with the 'pooling' field in model config.
+        Args:
+           `config`: the config of the model. The field of pool config will be initalized with the 'pooling' field in model config.
         """
-        pool_config = getattr(model_config, 'pooling', model_config)
-        self.hidden_size = getattr(pool_config, 'hidden_size', model_config.hidden_size)
+        pool_config = getattr(config, 'pooling', config)
+        self.hidden_size = getattr(pool_config, 'hidden_size', config.hidden_size)
         self.dropout = getattr(pool_config, 'dropout', 0)
         self.hidden_act = getattr(pool_config, 'hidden_act', 'gelu')
 

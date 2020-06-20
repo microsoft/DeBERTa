@@ -32,7 +32,7 @@ def create_model(args, num_labels, model_class_fn):
   # Prepare model
   rank = getattr(args, 'rank', 0)
   init_model = args.init_model if rank<1 else None
-  model = model_class_fn(init_model, args.bert_config, num_labels=num_labels, \
+  model = model_class_fn(init_model, args.model_config, num_labels=num_labels, \
       drop_out=args.cls_drop_out, \
       pre_trained = args.pre_trained)
   if args.fp16:
@@ -379,7 +379,7 @@ def build_argument_parser():
             type=str,
             help="The model state file used to initialize the model weights.")
 
-  parser.add_argument('--bert_config',
+  parser.add_argument('--model_config',
             type=str,
             help="The config file of bert model.")
 
