@@ -34,10 +34,11 @@ Read our [documentation](https://deberta.readthedocs.io/en/latest/)
 
 There are several ways to try our code,
 ### Use docker
-Docker is the recommended way to run the code as we already built every dependency into the our docker [bagai/deberta](https://hub.docker.com/r/bagai/deberta)
+Docker is the recommended way to run the code as we already built every dependency into the our docker [bagai/deberta](https://hub.docker.com/r/bagai/deberta) and you can follow the [docker official site](https://docs.docker.com/engine/install/ubuntu/) to install docker on your machine.
 
 To run with docker, make sure your system fullfil the requirements in the above list. Here are the steps to try the GLUE experiments: Pull the code, run `./run_docker.sh` 
 , and then you can run the bash commands under `/DeBERTa/experiments/glue/`
+
 
 ### Use pip
 Pull the code and run `pip3 install -r requirements.txt` in the root directory of the code, then enter `experiments/glue/` folder of the code and try the bash commands under that folder for glue experiments.

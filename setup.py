@@ -1,6 +1,15 @@
+import subprocess
+import datetime
+import sys
+
+def install(package):
+  subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+install('setuptools')
+install('gitpython')
+
 import setuptools
 import git
-import datetime
 
 repo = git.Repo(search_parent_directories=True)
 date=datetime.datetime.utcnow()
