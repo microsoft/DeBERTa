@@ -47,11 +47,7 @@ class XSoftmax(torch.autograd.Function):
     """
 
     cts.dim = dim
-    if version.Version(torch.__version__) >= version.Version('1.2.0a'):
-      rmask = ~(mask.bool())
-    else:
-      rmask = (1-mask).byte()
-
+    rmask = ~(mask.bool())
     output = input.masked_fill(rmask, float('-inf'))
     output = torch.softmax(output, cts.dim)
     output.masked_fill_(rmask, 0)
@@ -74,11 +70,32 @@ class DropoutContext(object):
     self.scale = 1
     self.reuse_mask = True
 
+def get_mask(input, local_context):
+  if not isinstance(local_context, DropoutContext):
+    dropout = local_context
+    mask = None
+  else:
+    dropout = local_context.dropout
+    dropout *= local_context.scale
+    mask = local_context.mask if local_context.reuse_mask else None
+
+  if dropout>0 and mask is None:
+    if version.Version(torch.__version__) >= version.Version('1.2.0a'):
+      mask=(1-torch.empty_like(input).bernoulli_(1-dropout)).bool()
+    else:
+      mask=(1-torch.empty_like(input).bernoulli_(1-dropout)).byte()
+  
+  if isinstance(local_context, DropoutContext):
+    if local_context.mask is None:
+      local_context.mask = mask
+
+  return mask, dropout
+
 @traceable
 class XDropout(torch.autograd.Function):
   @staticmethod
   def forward(ctx, input, local_ctx):
-    mask, dropout = XDropout.get_mask(input, local_ctx)
+    mask, dropout = get_mask(input, local_ctx)
     ctx.scale=1.0/(1-dropout)
     if dropout>0:
       ctx.save_for_backward(mask)
@@ -93,28 +110,6 @@ class XDropout(torch.autograd.Function):
       return grad_output.masked_fill(mask, 0)*ctx.scale, None
     else:
       return grad_output, None
-
-  @staticmethod
-  def get_mask(input, local_context):
-    if not isinstance(local_context, DropoutContext):
-      dropout = local_context
-      mask = None
-    else:
-      dropout = local_context.dropout
-      dropout *= local_context.scale
-      mask = local_context.mask if local_context.reuse_mask else None
-
-    if dropout>0 and mask is None:
-      if version.Version(torch.__version__) >= version.Version('1.2.0a'):
-        mask=(1-torch.empty_like(input).bernoulli_(1-dropout)).bool()
-      else:
-        mask=(1-torch.empty_like(input).bernoulli_(1-dropout)).byte()
-    
-    if isinstance(local_context, DropoutContext):
-      if local_context.mask is None:
-        local_context.mask = mask
-
-    return mask, dropout
 
 class StableDropout(torch.nn.Module):
   """ Optimized dropout module for stabilizing the training
