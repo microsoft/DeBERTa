@@ -36,7 +36,7 @@ RUN python -c "import nltk;nltk.download('punkt')"
 RUN python -m spacy download en
 
 #RUN pip3 install numpy==1.16.3 scipy==1.2.1 matplotlib jupyter pandas==0.24.2 sympy==1.4 nose==1.3.7 sklearn 
-#RUN pip3 install torch===1.3.1 torchvision===0.4.0 -f https://download.pytorch.org/whl/torch_stable.html
+#RUN pip3 install torch===1.5.1 torchvision===0.6.1 -f https://download.pytorch.org/whl/torch_stable.html
 
 #RUN pip3 install ujson cython xmltodict pytest
 

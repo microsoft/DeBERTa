@@ -11,14 +11,14 @@
   Disentangled SelfAttention module
 """
 
-import numpy as np
 import torch
 import math
 from .ops import *
 
 __all__=['build_relative_position', 'DisentangledSelfAttention']
 
-def build_relative_position(query_size, key_size):
+
+def build_relative_position(query_size, key_size, device):
     """ Build relative position according to the query and key
 
     We assume the absolute position of query :math:`P_q` is range from (0, query_size) and the absolute position of key :math:`P_k` is range from (0, key_size),
@@ -35,13 +35,28 @@ def build_relative_position(query_size, key_size):
 
     """
 
-    q_ids = np.arange(0, query_size)
-    k_ids = np.arange(0, key_size)
-    rel_pos_ids = q_ids[:, None] - np.tile(k_ids, (q_ids.shape[0],1))
-    rel_pos_ids = torch.tensor(rel_pos_ids, dtype=torch.long)
+    q_ids = torch.arange(query_size, dtype=torch.long, device=device)
+    k_ids = torch.arange(key_size, dtype=torch.long, device=device)
+    rel_pos_ids = q_ids[:, None] - k_ids.view(1, -1).repeat(query_size, 1)
     rel_pos_ids = rel_pos_ids[:query_size, :]
     rel_pos_ids = rel_pos_ids.unsqueeze(0)
     return rel_pos_ids
+
+
+@torch.jit.script
+def c2p_dynamic_expand(c2p_pos, query_layer, relative_pos):
+    return c2p_pos.expand([query_layer.size(0), query_layer.size(1), query_layer.size(2), relative_pos.size(-1)])
+
+
+@torch.jit.script
+def p2c_dynamic_expand(c2p_pos, query_layer, key_layer):
+    return c2p_pos.expand([query_layer.size(0), query_layer.size(1), key_layer.size(-2), key_layer.size(-2)])
+
+
+@torch.jit.script
+def pos_dynamic_expand(pos_index, p2c_att, key_layer):
+    return pos_index.expand(p2c_att.size()[:2] + (pos_index.size(-2), key_layer.size(-2)))
+
 
 class DisentangledSelfAttention(torch.nn.Module):
     """ Disentangled self-attention module
@@ -176,7 +191,7 @@ class DisentangledSelfAttention(torch.nn.Module):
     def disentangled_att_bias(self, query_layer, key_layer, relative_pos, rel_embeddings, scale_factor):
         if relative_pos is None:
             q = query_layer.size(-2)
-            relative_pos = build_relative_position(q, key_layer.size(-2))
+            relative_pos = build_relative_position(q, key_layer.size(-2), query_layer.device)
         if relative_pos.dim()==2:
             relative_pos = relative_pos.unsqueeze(0).unsqueeze(0)
         elif relative_pos.dim()==3:
@@ -201,14 +216,14 @@ class DisentangledSelfAttention(torch.nn.Module):
         if 'c2p' in self.pos_att_type:
             c2p_att = torch.matmul(query_layer, pos_key_layer.transpose(-1, -2))
             c2p_pos = torch.clamp(relative_pos + att_span, 0, att_span*2-1)
-            c2p_att = torch.gather(c2p_att, dim=-1, index=c2p_pos.expand([query_layer.size(0), query_layer.size(1), query_layer.size(2), relative_pos.size(-1)]))
+            c2p_att = torch.gather(c2p_att, dim=-1, index=c2p_dynamic_expand(c2p_pos, query_layer, relative_pos))
             score += c2p_att
 
         # position->content
         if 'p2c' in self.pos_att_type or 'p2p' in self.pos_att_type:
             pos_query_layer /= math.sqrt(pos_query_layer.size(-1)*scale_factor)
             if query_layer.size(-2) != key_layer.size(-2):
-                r_pos = build_relative_position(key_layer.size(-2), key_layer.size(-2)).to(query_layer.device)
+                r_pos = build_relative_position(key_layer.size(-2), key_layer.size(-2), query_layer.device)
             else:
                 r_pos = relative_pos
             p2c_pos = torch.clamp(-r_pos + att_span, 0, att_span*2-1)
@@ -217,9 +232,9 @@ class DisentangledSelfAttention(torch.nn.Module):
 
         if 'p2c' in self.pos_att_type:
             p2c_att = torch.matmul(key_layer, pos_query_layer.transpose(-1, -2))
-            p2c_att = torch.gather(p2c_att, dim=-1, index=p2c_pos.expand([query_layer.size(0), query_layer.size(1), key_layer.size(-2), key_layer.size(-2)])).transpose(-1,-2)
+            p2c_att = torch.gather(p2c_att, dim=-1, index=p2c_dynamic_expand(p2c_pos, query_layer, key_layer)).transpose(-1,-2)
             if query_layer.size(-2) != key_layer.size(-2):
-                p2c_att = torch.gather(p2c_att, dim=-2, index=pos_index.expand(p2c_att.size()[:2] + (pos_index.size(-2), key_layer.size(-2))))
+                p2c_att = torch.gather(p2c_att, dim=-2, index=pos_dynamic_expand(pos_index, p2c_att, key_layer))
             score += p2c_att
 
         return score

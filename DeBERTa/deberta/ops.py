@@ -10,6 +10,7 @@
 import math
 from packaging import version
 import torch
+from ..utils.jit_tracing import traceable
 
 if version.Version(torch.__version__) >= version.Version('1.0.0'):
   from torch import _softmax_backward_data as _softmax_backward_data
@@ -18,6 +19,7 @@ else:
 
 __all__ = ['StableDropout', 'MaskedLayerNorm', 'XSoftmax']
 
+@traceable
 class XSoftmax(torch.autograd.Function):
   """ Masked Softmax which is optimized for saving memory
 
@@ -40,29 +42,29 @@ class XSoftmax(torch.autograd.Function):
   """
 
   @staticmethod
-  def forward(self, input, mask, dim):
+  def forward(cts, input, mask, dim):
     """
     """
 
-    self.dim = dim
+    cts.dim = dim
     if version.Version(torch.__version__) >= version.Version('1.2.0a'):
-      rmask = (1-mask).bool()
+      rmask = ~(mask.bool())
     else:
       rmask = (1-mask).byte()
 
     output = input.masked_fill(rmask, float('-inf'))
-    output = torch.softmax(output, self.dim)
+    output = torch.softmax(output, cts.dim)
     output.masked_fill_(rmask, 0)
-    self.save_for_backward(output)
+    cts.save_for_backward(output)
     return output
 
   @staticmethod
-  def backward(self, grad_output):
+  def backward(cts, grad_output):
     """
     """
 
-    output, = self.saved_tensors
-    inputGrad = _softmax_backward_data(grad_output, output, self.dim, output)
+    output, = cts.saved_tensors
+    inputGrad = _softmax_backward_data(grad_output, output, cts.dim, output)
     return inputGrad, None, None
 
 class DropoutContext(object):
@@ -72,6 +74,7 @@ class DropoutContext(object):
     self.scale = 1
     self.reuse_mask = True
 
+@traceable
 class XDropout(torch.autograd.Function):
   @staticmethod
   def forward(ctx, input, local_ctx):

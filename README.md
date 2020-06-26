@@ -25,7 +25,7 @@ Read our [documentation](https://deberta.readthedocs.io/en/latest/)
 ## Requirements
 - Linux system, e.g. Ubuntu 18.04LTS
 - CUDA 10.0
-- pytorch 1.3.0
+- pytorch 1.5.1
 - python 3.6
 - bash shell 4.0
 - curl
