@@ -42,25 +42,29 @@ class XSoftmax(torch.autograd.Function):
   """
 
   @staticmethod
-  def forward(cts, input, mask, dim):
+  def forward(self, input, mask, dim):
     """
     """
 
-    cts.dim = dim
-    rmask = ~(mask.bool())
+    self.dim = dim
+    if version.Version(torch.__version__) >= version.Version('1.2.0a'):
+      rmask = ~(mask.bool())
+    else:
+      rmask = (1-mask).byte() # This line is not supported by Onnx tracing.
+
     output = input.masked_fill(rmask, float('-inf'))
-    output = torch.softmax(output, cts.dim)
+    output = torch.softmax(output, self.dim)
     output.masked_fill_(rmask, 0)
-    cts.save_for_backward(output)
+    self.save_for_backward(output)
     return output
 
   @staticmethod
-  def backward(cts, grad_output):
+  def backward(self, grad_output):
     """
     """
 
-    output, = cts.saved_tensors
-    inputGrad = _softmax_backward_data(grad_output, output, cts.dim, output)
+    output, = self.saved_tensors
+    inputGrad = _softmax_backward_data(grad_output, output, self.dim, output)
     return inputGrad, None, None
 
 class DropoutContext(object):

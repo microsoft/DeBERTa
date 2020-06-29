@@ -5,8 +5,8 @@ pytest
 regex
 scipy
 sklearn
-torch==1.5.1
-torchvision==0.6.1
+torch
+torchvision
 tqdm
 ujson
 seqeval
