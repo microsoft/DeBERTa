@@ -33,7 +33,7 @@ class SequenceClassificationModel(NNModule):
     self.pooler = ContextPooler(pool_config)
     output_dim = self.pooler.output_dim()
 
-    self.classifier = nn.Linear(output_dim, num_labels)
+    self.classifier = torch.nn.Linear(output_dim, num_labels)
     drop_out = self.config.hidden_dropout_prob if drop_out is None else drop_out
     self.dropout = StableDropout(drop_out)
     self.apply(self.init_weights)
@@ -49,7 +49,7 @@ class SequenceClassificationModel(NNModule):
     if labels is not None:
       if self.num_labels ==1:
         # regression task
-        loss_fn = nn.MSELoss()
+        loss_fn = torch.nn.MSELoss()
         logits=logits.view(-1).to(labels.dtype)
         loss = loss_fn(logits, labels.view(-1))
       elif labels.dim()==1 or labels.size(-1)==1:
