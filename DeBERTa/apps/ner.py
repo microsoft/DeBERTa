@@ -31,7 +31,8 @@ class NERModel(NNModule):
     self.apply(self.init_weights)
 
   def forward(self, input_ids, type_ids=None, input_mask=None, labels=None, position_ids=None, **kwargs):
-    encoder_layers = self.bert(input_ids, type_ids, input_mask, position_ids=position_ids, output_all_encoded_layers=True)
+    encoder_layers = self.bert(input_ids, token_type_ids=type_ids, attention_mask=input_mask, \
+        position_ids=position_ids, output_all_encoded_layers=True)
     cls = encoder_layers[-1]
     cls = self.proj(cls)
     cls = ACT2FN['gelu'](cls)

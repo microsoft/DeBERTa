@@ -15,6 +15,7 @@ def traceable(cls):
       class MyOp(torch.autograd.Function):
       xxx
   """
+
   class _Function(object):
     @staticmethod
     def apply(*args):
@@ -28,6 +29,8 @@ def traceable(cls):
     def save_for_backward(*args):
       pass
 
+  _Function.__name__ = cls.__name__
+  _Function.__doc__ = cls.__doc__
   return _Function
 
 class TraceMode():
