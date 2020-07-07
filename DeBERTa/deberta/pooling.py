@@ -11,10 +11,11 @@ import copy
 import json
 from .bert import ACT2FN
 from .ops import StableDropout
+from .config import AbsModelConfig
 
 __all__ = ['PoolConfig', 'ContextPooler']
 
-class PoolConfig(object):
+class PoolConfig(AbsModelConfig):
     """Configuration class to store the configuration of `pool layer`.
 
         Parameters:
@@ -47,16 +48,23 @@ class PoolConfig(object):
                 }
 
     """
-    def __init__(self, config):
+    def __init__(self, config=None):
         """Constructs PoolConfig.
 
         Args:
            `config`: the config of the model. The field of pool config will be initalized with the 'pooling' field in model config.
         """
-        pool_config = getattr(config, 'pooling', config)
-        self.hidden_size = getattr(pool_config, 'hidden_size', config.hidden_size)
-        self.dropout = getattr(pool_config, 'dropout', 0)
-        self.hidden_act = getattr(pool_config, 'hidden_act', 'gelu')
+        
+        self.hidden_size = 768
+        self.dropout = 0
+        self.hidden_act = 'gelu'
+        if config:
+            pool_config = getattr(config, 'pooling', config)
+            if isinstance(pool_config, dict):
+                pool_config = AbsModelConfig.from_dict(pool_config)
+            self.hidden_size = getattr(pool_config, 'hidden_size', config.hidden_size)
+            self.dropout = getattr(pool_config, 'dropout', 0)
+            self.hidden_act = getattr(pool_config, 'hidden_act', 'gelu')
 
 class ContextPooler(nn.Module):
     def __init__(self, config):

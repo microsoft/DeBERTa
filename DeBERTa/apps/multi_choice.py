@@ -39,7 +39,8 @@ class MultiChoiceModel(NNModule):
       position_ids = position_ids.view([-1, position_ids.size(-1)])
     if input_mask is not None:
       input_mask = input_mask.view([-1, input_mask.size(-1)])
-    encoder_layers = self.bert(input_ids, type_ids, input_mask, position_ids=position_ids, output_all_encoded_layers=True)
+    encoder_layers = self.bert(input_ids, token_type_ids=type_ids, attention_mask=input_mask,
+        position_ids=position_ids, output_all_encoded_layers=True)
     seqout = encoder_layers[-1]
     cls = seqout[:,:1,:]
     cls = cls/math.sqrt(seqout.size(-1))

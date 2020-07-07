@@ -5,10 +5,10 @@ pytest
 regex
 scipy
 sklearn
-torch
-torchvision
 tqdm
 ujson
 seqeval
 psutil
-GitPython
+#GitPython
+#torch
+#torchvision
