@@ -115,7 +115,11 @@ class XDropout(torch.autograd.Function):
     else:
       return grad_output, None
 
-class StableDropout(torch.nn.Module):
+class StableDropout(torch.nn.Dropout):
+  def __init__(self, drop_prob):
+      super().__init__()
+
+class StableDropout1(torch.nn.Module):
   """ Optimized dropout module for stabilizing the training
 
   Args:
