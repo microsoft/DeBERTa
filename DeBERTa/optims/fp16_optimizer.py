@@ -20,6 +20,8 @@ import ctypes
 from ..utils import get_logger
 logger=get_logger()
 
+# Lines below tightly couple DeBerta with torch 1.3 
+# TBD refactor or port to torch 1.6
 lib = ctypes.cdll.LoadLibrary(None)
 lib.THCudaHalfTensor_normall.argtypes=[ctypes.c_void_p, ctypes.c_void_p]
 lib.THCudaHalfTensor_normall.restype = ctypes.c_float
