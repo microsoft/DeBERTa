@@ -10,5 +10,5 @@ ujson
 seqeval
 psutil
 #GitPython
-#torch
+torch
 #torchvision

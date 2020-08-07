@@ -1,6 +1,6 @@
 # DeBERTa: Decoding-enhanced BERT with Disentangled Attention
 
-This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**e**nhanced **BERT** with **D**isentangled **A**ttention ](https://arxiv.org/abs/2006.03654)
+This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**e**nhanced **BERT** with Disentangled **A**ttention ](https://arxiv.org/abs/2006.03654)
 
 ## News
 ### 06/13/2020

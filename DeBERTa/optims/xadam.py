@@ -38,6 +38,7 @@ def adamw(data,
   beta2_ = 1 - beta2
   if grad_scale != 1:
     grad *= 1/grad_scale
+  grad = grad.to(next_m)
   next_m.mul_(beta1).add_(beta1_, grad)
   # admax
   admax = eps_mode>>4
