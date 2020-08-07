@@ -250,7 +250,7 @@ def create_ort_trainer(args, device, model):
         map_optimizer_attributes,
         IODescription('Learning_Rate', [1,], torch.float32),
         device,
-        _opset_version = 10)
+        _opset_version = 12)
 
     return model
 
