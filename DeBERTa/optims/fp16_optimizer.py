@@ -20,9 +20,14 @@ import ctypes
 from ..utils import get_logger
 logger=get_logger()
 
-lib = ctypes.cdll.LoadLibrary(None)
-lib.THCudaHalfTensor_normall.argtypes=[ctypes.c_void_p, ctypes.c_void_p]
-lib.THCudaHalfTensor_normall.restype = ctypes.c_float
+try:
+  lib = ctypes.cdll.LoadLibrary(None)
+  lib.THCudaHalfTensor_normall.argtypes=[ctypes.c_void_p, ctypes.c_void_p]
+  lib.THCudaHalfTensor_normall.restype = ctypes.c_float
+except:
+  lib = None
+  logger.warning('Failed to load half normal.')
+  pass
 
 
 __all__ = ['Fp16Optimizer', 'ExpLossScaler']
@@ -36,8 +41,10 @@ def get_world_size():
 
 def fused_norm(input):
   if input.type() == 'torch.cuda.HalfTensor':
-    return lib.THCudaHalfTensor_normall(torch.cuda._state_cdata,
-      input._cdata, 16384)
+    if (lib is not None):
+      return lib.THCudaHalfTensor_normall(torch.cuda._state_cdata, input._cdata, 16384)
+    else:
+      return input.norm()
   else:
     return input.norm()
 
