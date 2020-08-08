@@ -265,9 +265,10 @@ def run_onnx_training(args, model, device, train_data, prefix=None):
   for step, batch in enumerate(AsyncDataLoader(train_dataloader, 100)):
     #import pdb
     #pdb.set_trace()
+    lr = torch.tensor([0.0000000e+00]).to(device)
     batch = batch_to(batch, device)
     with torch.no_grad():
-      trainer.train_step(batch['input_ids'], batch['type_ids'], batch['position_ids'], batch['input_mask'], batch['labels'])
+      trainer.train_step(batch['input_ids'], batch['type_ids'], batch['position_ids'], batch['input_mask'], batch['labels'], lr)
       # conversion fails now with:
       # site-packages/torch/onnx/utils.py:617: UserWarning: ONNX export failed on ATen operator broadcast_tensors
       # because torch.onnx.symbolic_opset10.broadcast_tensors does not exist
