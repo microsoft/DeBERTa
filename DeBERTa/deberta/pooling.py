@@ -58,8 +58,8 @@ class PoolConfig(AbsModelConfig):
         self.hidden_size = 768
         self.dropout = 0
         self.hidden_act = 'gelu'
-        self.use_xdropout = True
-        self.use_xsoftmax = True
+        self.use_xdropout = False
+        self.use_xsoftmax = False
         if config:
             pool_config = getattr(config, 'pooling', config)
             if isinstance(pool_config, dict):

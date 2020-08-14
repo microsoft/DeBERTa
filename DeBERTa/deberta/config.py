@@ -15,8 +15,8 @@ class AbsModelConfig(object):
             if isinstance(value, dict):
                 value = AbsModelConfig.from_dict(value)
             config.__dict__[key] = value
-        config.use_xdropout = True
-        config.use_xsoftmax = True
+        config.use_xdropout = False
+        config.use_xsoftmax = False
         return config
 
     @classmethod

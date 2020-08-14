@@ -101,6 +101,7 @@ class DisentangledSelfAttention(torch.nn.Module):
                 self.pos_q_proj = torch.nn.Linear(config.hidden_size, self.all_head_size)
 
         self.dropout = StableDropout(config.attention_probs_dropout_prob) if config.use_xdropout else torch.nn.Dropout(config.attention_probs_dropout_prob)
+        self.use_xsoftmax = config.use_xsoftmax
 
     def transpose_for_scores(self, x):
         new_x_shape = x.size()[:-1] + (self.num_attention_heads, -1)
@@ -175,9 +176,11 @@ class DisentangledSelfAttention(torch.nn.Module):
         if self.talking_head:
             attention_scores = self.head_logits_proj(attention_scores.permute(0,2,3,1)).permute(0,3,1,2)
 
-        #attention_probs = XSoftmax.apply(attention_scores, attention_mask, -1)
-        nodex = torch.nn.Softmax(-1)
-        attention_probs = nodex(attention_scores + 10000.0*(attention_mask -1))
+        if self.use_xsoftmax:
+            attention_probs = XSoftmax.apply(attention_scores, attention_mask, -1)
+        else:
+            nodex = torch.nn.Softmax(-1)
+            attention_probs = nodex(attention_scores + 10000.0*(attention_mask -1))
         attention_probs = self.dropout(attention_probs)
         if self.talking_head:
             attention_probs = self.head_weights_proj(attention_probs.permute(0,2,3,1)).permute(0,3,1,2)
