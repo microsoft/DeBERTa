@@ -77,9 +77,9 @@ class DisentangledSelfAttention(torch.nn.Module):
         self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
         self.all_head_size = self.num_attention_heads * self.attention_head_size
         self.in_proj = torch.nn.Linear(config.hidden_size, self.all_head_size*3, bias=False)
-        # Looks like params below are never updated and const, so removing them
-        #self.q_bias = torch.nn.Parameter(torch.zeros((self.all_head_size), dtype=torch.float))
-        #self.v_bias = torch.nn.Parameter(torch.zeros((self.all_head_size), dtype=torch.float))
+        # ONNX graph builder thinks params below are not used for loss calcualtion
+        self.q_bias = torch.nn.Parameter(torch.zeros((self.all_head_size), dtype=torch.float))
+        self.v_bias = torch.nn.Parameter(torch.zeros((self.all_head_size), dtype=torch.float))
         self.pos_att_type = [x.strip() for x in getattr(config, 'pos_att_type', 'none').lower().split('|')] # c2p|p2c
         
         self.relative_attention = getattr(config, 'relative_attention', False)
@@ -93,14 +93,14 @@ class DisentangledSelfAttention(torch.nn.Module):
             self.max_relative_positions = getattr(config, 'max_relative_positions', -1)
             if self.max_relative_positions <1:
                 self.max_relative_positions = config.max_position_embeddings
-            self.pos_dropout = StableDropout(config.hidden_dropout_prob)
+            self.pos_dropout = StableDropout(config.hidden_dropout_prob) if config.use_xdropout else torch.nn.Dropout(config.hidden_dropout_prob)
 
             if 'c2p' in self.pos_att_type or 'p2p' in self.pos_att_type:
                 self.pos_proj = torch.nn.Linear(config.hidden_size, self.all_head_size, bias=False)
             if 'p2c' in self.pos_att_type or 'p2p' in self.pos_att_type:
                 self.pos_q_proj = torch.nn.Linear(config.hidden_size, self.all_head_size)
 
-        self.dropout = StableDropout(config.attention_probs_dropout_prob)
+        self.dropout = StableDropout(config.attention_probs_dropout_prob) if config.use_xdropout else torch.nn.Dropout(config.attention_probs_dropout_prob)
 
     def transpose_for_scores(self, x):
         new_x_shape = x.size()[:-1] + (self.num_attention_heads, -1)
@@ -149,10 +149,8 @@ class DisentangledSelfAttention(torch.nn.Module):
             k,v = [linear(qkvw[i], qkvb[i], hidden_states) for i in range(1,3)]
             query_layer, key_layer, value_layer = [self.transpose_for_scores(x) for x in [q,k,v]]
 
-        q_bias = torch.nn.Parameter(torch.zeros((self.all_head_size), dtype=torch.float))
-        v_bias = torch.nn.Parameter(torch.zeros((self.all_head_size), dtype=torch.float))
-        query_layer += self.transpose_for_scores(q_bias.unsqueeze(0).unsqueeze(0))
-        value_layer += self.transpose_for_scores(v_bias.unsqueeze(0).unsqueeze(0))
+        query_layer += self.transpose_for_scores(self.q_bias.unsqueeze(0).unsqueeze(0))
+        value_layer += self.transpose_for_scores(self.v_bias.unsqueeze(0).unsqueeze(0))
 
         rel_att = None
         # Take the dot product between "query" and "key" to get the raw attention scores.

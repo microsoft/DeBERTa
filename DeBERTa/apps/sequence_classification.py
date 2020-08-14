@@ -35,7 +35,7 @@ class SequenceClassificationModel(NNModule):
 
     self.classifier = torch.nn.Linear(output_dim, num_labels)
     drop_out = self.config.hidden_dropout_prob if drop_out is None else drop_out
-    self.dropout = StableDropout(drop_out)
+    self.dropout = StableDropout(drop_out) if config.use_xdropout else  torch.nn.Dropout(drop_out)
     self.apply(self.init_weights)
     self.bert.apply_state()
 

@@ -27,7 +27,7 @@ class NERModel(NNModule):
     self.proj = nn.Linear(config.hidden_size, config.hidden_size)
     self.classifier = nn.Linear(config.hidden_size, self.num_labels)
     drop_out = config.hidden_dropout_prob if drop_out is None else drop_out
-    self.dropout = StableDropout(drop_out)
+    self.dropout = StableDropout(drop_out) if config.use_xdropout else nn.Dropout(drop_out)
     self.apply(self.init_weights)
 
   def forward(self, input_ids, type_ids=None, input_mask=None, labels=None, position_ids=None, **kwargs):

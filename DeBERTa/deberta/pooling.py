@@ -58,6 +58,8 @@ class PoolConfig(AbsModelConfig):
         self.hidden_size = 768
         self.dropout = 0
         self.hidden_act = 'gelu'
+        self.use_xdropout = True
+        self.use_xsoftmax = True
         if config:
             pool_config = getattr(config, 'pooling', config)
             if isinstance(pool_config, dict):
@@ -70,7 +72,7 @@ class ContextPooler(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
-        self.dropout = StableDropout(config.dropout)
+        self.dropout = StableDropout(config.dropout) if config.use_xdropout else nn.Dropout(config.dropout) 
         self.config = config
 
     def forward(self, hidden_states, mask = None):
