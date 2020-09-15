@@ -12,7 +12,7 @@ logging.basicConfig(format = '%(asctime)s|%(levelname)s|%(name)s| %(message)s',
                     datefmt = '%m%d%Y %H:%M:%S',
                     level = logging.INFO)
 logger=None
-def set_logger(name, file_log, rank=0, verbose=1):
+def set_logger(name, file_log=None, rank=0, verbose=1):
     global logger
     if not logger:
       logger = logging.getLogger(name)
@@ -25,11 +25,11 @@ def set_logger(name, file_log, rank=0, verbose=1):
       formatter = logging.Formatter(f'%(asctime)s|%(levelname)s|%(name)s|{rank:02}| %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
     else:
       formatter = logging.Formatter(f'%(asctime)s|%(levelname)s|%(name)s| %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
-
-    fh = logging.FileHandler(file_log)
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
+    if file_log:
+        fh = logging.FileHandler(file_log)
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
 
     # Stdout
     # create console handler with a higher log level
@@ -46,7 +46,7 @@ def set_logger(name, file_log, rank=0, verbose=1):
     logger.propagate=False
     return logger
 
-def get_logger(name='logging', file_log='/tmp/log.txt', rank=0, verbose=1):
+def get_logger(name='logging', file_log=None, rank=0, verbose=1):
   global logger
   if not logger:
     logger = set_logger(name, file_log, rank, verbose)
