@@ -84,7 +84,7 @@ tokenizer = deberta.GPT2Tokenizer()
 max_seq_len = 512
 tokens = tokenizer.tokenize('Examples input text of DeBERTa')
 # Truncate long sequence
-tokens = tokens[:max_seq_len]
+tokens = tokens[:max_seq_len -2]
 # Add special tokens to the `tokens`
 tokens = ['[CLS]'] + tokens + ['[SEP]']
 input_ids = tokenizer.convert_tokens_to_ids(tokens)
