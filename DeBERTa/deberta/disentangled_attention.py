@@ -77,7 +77,6 @@ class DisentangledSelfAttention(torch.nn.Module):
         self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
         self.all_head_size = self.num_attention_heads * self.attention_head_size
         self.in_proj = torch.nn.Linear(config.hidden_size, self.all_head_size*3, bias=False)
-        # ONNX graph builder thinks params below are not used for loss calcualtion
         self.q_bias = torch.nn.Parameter(torch.zeros((self.all_head_size), dtype=torch.float))
         self.v_bias = torch.nn.Parameter(torch.zeros((self.all_head_size), dtype=torch.float))
         self.pos_att_type = [x.strip() for x in getattr(config, 'pos_att_type', 'none').lower().split('|')] # c2p|p2c
