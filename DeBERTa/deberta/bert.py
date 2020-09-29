@@ -145,6 +145,7 @@ class BertEncoder(nn.Module):
   def __init__(self, config):
     super().__init__()
     layer = BertLayer(config)
+    # Set number of layers here
     self.layer = nn.ModuleList([copy.deepcopy(layer) for _ in range(config.num_hidden_layers)])
     self.relative_attention = getattr(config, 'relative_attention', False)
     if self.relative_attention:
