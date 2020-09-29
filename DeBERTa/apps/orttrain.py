@@ -29,6 +29,7 @@ def create_model(args, num_labels, model_class_fn):
 
 def main(args):
   os.makedirs(args.output_dir, exist_ok=True)
+  logger.info("Using seed " + str(args.seed))
   random.seed(args.seed)
   np.random.seed(args.seed)
   torch.manual_seed(args.seed)
@@ -104,7 +105,7 @@ def build_argument_parser():
             help="Total number of training epochs to perform.")
   parser.add_argument('--seed',
             type=int,
-            default=1234,
+            default=random.randint(0,  2**32 - 1),
             help="random seed for initialization")
   parser.add_argument('--fp16',
             default=False,

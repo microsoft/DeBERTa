@@ -138,7 +138,6 @@ class ORTTransformerTrainer:
             self.train_dataset,
             batch_size=self.args.train_batch_size,
             sampler=train_sampler,
-            #drop_last=True,
             collate_fn=self.data_collator.collate_batch,
         )
 
@@ -147,7 +146,6 @@ class ORTTransformerTrainer:
             self.eval_dataset,
             batch_size=self.args.eval_batch_size,
             shuffle=False,
-            #drop_last=True,
             collate_fn=self.data_collator.collate_batch,
         )
 
@@ -157,7 +155,6 @@ class ORTTransformerTrainer:
             test_dataset,
             batch_size=self.args.eval_batch_size,
             shuffle=False,
-            #drop_last=True,
             collate_fn=self.data_collator.collate_batch,
         )
 
