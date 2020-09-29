@@ -437,7 +437,6 @@ def build_argument_parser():
             default=None,
             type=str,
             help="The path of pre-trained RoBERTa model")
-  
   return parser
 
 if __name__ == "__main__":

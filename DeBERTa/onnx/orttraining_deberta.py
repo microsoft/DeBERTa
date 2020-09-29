@@ -39,6 +39,7 @@ class ORTGlueTest(unittest.TestCase):
         # configurations not to be changed accoss tests
         self.max_seq_length = args.max_seq_length
         self.train_batch_size = args.train_batch_size
+        self.eval_batch_size = args.eval_batch_size
         self.learning_rate = args.learning_rate
         self.num_train_epochs = args.num_train_epochs
         self.local_rank = -1
@@ -81,7 +82,7 @@ class ORTGlueTest(unittest.TestCase):
         training_args = TrainingArguments(
             output_dir=os.path.join(self.output_dir, task_name), do_train=True, do_eval=True,
             per_gpu_train_batch_size=self.train_batch_size,
-            per_gpu_eval_batch_size = self.train_batch_size,
+            per_gpu_eval_batch_size = self.eval_batch_size,
             learning_rate=self.learning_rate, num_train_epochs=self.num_train_epochs,
             local_rank=self.local_rank,
             overwrite_output_dir=self.overwrite_output_dir, gradient_accumulation_steps=self.gradient_accumulation_steps,

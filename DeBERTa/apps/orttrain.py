@@ -79,8 +79,7 @@ def build_argument_parser():
             type=str,
             required=True,
             help="The directory to store the pretrained models downloaded from s3.")
-
-  ## Other parameters
+  ## Other parameters, 
   parser.add_argument("--max_seq_length",
             default=128,
             type=int,
@@ -95,14 +94,35 @@ def build_argument_parser():
             default=32,
             type=int,
             help="Total batch size for eval.")
-  parser.add_argument("--max_grad_norm",
-            default=1,
-            type=float,
-            help="The clip threshold of global gradient norm")
   parser.add_argument("--learning_rate",
             default=5e-5,
             type=float,
             help="The initial learning rate for Adam.")
+  parser.add_argument("--num_train_epochs",
+            default=3.0,
+            type=float,
+            help="Total number of training epochs to perform.")
+  parser.add_argument('--seed',
+            type=int,
+            default=1234,
+            help="random seed for initialization")
+  parser.add_argument('--fp16',
+            default=False,
+            type=boolean_string,
+            help="Whether to use 16-bit float precision instead of 32-bit")
+  parser.add_argument('--init_model',
+            type=str,
+            help="The model state file used to initialize the model weights.")
+  parser.add_argument('--pre_trained',
+            default=None,
+            type=str,
+            help="The path of pre-trained RoBERTa model")
+
+  ## TBD: review params below
+  parser.add_argument("--max_grad_norm",
+            default=1,
+            type=float,
+            help="The clip threshold of global gradient norm")
   parser.add_argument("--epsilon",
             default=1e-6,
             type=float,
@@ -115,10 +135,6 @@ def build_argument_parser():
             default=0.999,
             type=float,
             help="The beta2 parameter for Adam.")
-  parser.add_argument("--num_train_epochs",
-            default=3.0,
-            type=float,
-            help="Total number of training epochs to perform.")
   parser.add_argument("--warmup_proportion",
             default=0.1,
             type=float,
@@ -133,43 +149,19 @@ def build_argument_parser():
             type=str,
             help="The learning rate scheduler used for traning. "
               "E.g. warmup_linear, warmup_linear_shift, warmup_cosine, warmup_constant. Default, warmup_linear")
-
-  parser.add_argument("--local_rank",
-            type=int,
-            default=-1,
-            help="local_rank for distributed training on gpus")
-
-  parser.add_argument('--seed',
-            type=int,
-            default=1234,
-            help="random seed for initialization")
-
   parser.add_argument('--accumulative_update',
             type=int,
             default=1,
             help="Number of updates steps to accumulate before performing a backward/update pass.")
-
-  parser.add_argument('--fp16',
-            default=False,
-            type=boolean_string,
-            help="Whether to use 16-bit float precision instead of 32-bit")
-
   parser.add_argument('--loss_scale',
             type=float, default=256,
             help='Loss scaling, positive power of 2 values can improve fp16 convergence.')
-
   parser.add_argument('--scale_steps',
             type=int, default=1000,
             help='The steps to wait to increase the loss scale.')
-
-  parser.add_argument('--init_model',
-            type=str,
-            help="The model state file used to initialize the model weights.")
-
   parser.add_argument('--model_config',
             type=str,
             help="The config file of bert model.")
-
   parser.add_argument('--cls_drop_out',
             type=float,
             default=None,
@@ -178,43 +170,11 @@ def build_argument_parser():
             type=float,
             default=0.01,
             help="The weight decay rate")
-
-  parser.add_argument('--tag',
-            type=str,
-            default='final',
-            help="The tag name of current prediction/runs.")
-
-  parser.add_argument("--dump_interval",
-            default=10000,
-            type=int,
-            help="Interval steps for generating checkpoint.")
-
-  parser.add_argument('--lookahead_k',
-            default=-1,
-            type=int,
-            help="lookahead k parameter")
-
-  parser.add_argument('--lookahead_alpha',
-            default=0.5,
-            type=float,
-            help="lookahead alpha parameter")
-
   parser.add_argument('--opt_type',
             type=str.lower,
             default='adam',
             choices=['adam', 'admax'],
             help="The optimizer to be used.")
-
-  parser.add_argument('--workers',
-            type=int,
-            default=2,
-            help="The workers to load data.")
-
-  parser.add_argument('--pre_trained',
-            default=None,
-            type=str,
-            help="The path of pre-trained RoBERTa model")
-  
   return parser
 
 if __name__ == "__main__":
