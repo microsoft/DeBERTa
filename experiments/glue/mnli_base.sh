@@ -9,7 +9,7 @@ function setup_glue_data(){
 	task=$1
 	mkdir -p $cache_dir
 	if [[ ! -e $cache_dir/glue_tasks/${task}/train.tsv ]]; then
-		curl -J -L https://raw.githubusercontent.com/nyu-mll/jiant/master/scripts/download_glue_data.py | python3 - --data_dir $cache_dir/glue_tasks --tasks $task
+		curl -J -L https://raw.githubusercontent.com/nyu-mll/jiant/v1.3.2/scripts/download_glue_data.py | python3 - --data_dir $cache_dir/glue_tasks --tasks $task
 	fi
 }
 

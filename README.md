@@ -3,6 +3,9 @@
 This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**e**nhanced **BERT** with Disentangled **A**ttention ](https://arxiv.org/abs/2006.03654)
 
 ## News
+### 12/29/2020
+With DeBERTa 1.5B model, we surpass T5 11B model and human performance on SuperGLUE leaderboard. Code and model will be released soon. Please check out our paper for more details.
+
 ### 06/13/2020
 We released the pre-trained models, source code, and fine-tuning scripts to reproduce some of the experimental results in the paper. You can follow similar scripts to apply DeBERTa to your own experiments or applications. Pre-training scripts will be released in the next step. 
 
@@ -130,7 +133,7 @@ python3 -m DeBERTa.apps.train --task_name $task --do_train  \
 ```
 
 ## Important Notes
-1. To run our code on multiple GPUs, you must `OMP_NUM_THREADS=1` before lunch our training code
+1. To run our code on multiple GPUs, you must `OMP_NUM_THREADS=1` before launch our training code
 2. By default we will cache the pre-trained model and tokenizer at `$HOME/.~DeBERTa`, you may need to clean it if the downloading failed unexpectedly.
 
 
@@ -140,6 +143,7 @@ We report our numbers based on multple runs with different random seeds here. He
 
 |Task	 |Command	|Results	|Running Time(8x32G V100 GPUs)|
 |--------|---------------|---------------|-------------------------|
+|MNLI xlarge|	`experiments/glue/mnli_xlarge.sh`|	91.5/91.4 +/-0.1|	2.5h|
 |MNLI large|	`experiments/glue/mnli_large.sh`|	91.2/91.0 +/-0.1|	2.5h|
 |QQP large|	`experiments/glue/qqp_large.sh`|	92.3 +/-0.1|		6h|
 |QNLI large|	`experiments/glue/qnli_large.sh`|	95.3 +/-0.2|		2h|
