@@ -140,7 +140,7 @@ We report our numbers based on multple runs with different random seeds here. He
 
 |Task	 |Command	|Results	|Running Time(8x32G V100 GPUs)|
 |--------|---------------|---------------|-------------------------|
-|MNLI xlarge|	`experiments/glue/mnli_xlarge.sh`|	91.5/91.1 +/-0.1|	2.5h|
+|MNLI xlarge|	`experiments/glue/mnli_xlarge.sh`|	91.5/91.4 +/-0.1|	2.5h|
 |MNLI large|	`experiments/glue/mnli_large.sh`|	91.2/91.0 +/-0.1|	2.5h|
 |QQP large|	`experiments/glue/qqp_large.sh`|	92.3 +/-0.1|		6h|
 |QNLI large|	`experiments/glue/qnli_large.sh`|	95.3 +/-0.2|		2h|
