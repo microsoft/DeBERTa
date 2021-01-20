@@ -133,7 +133,7 @@ python3 -m DeBERTa.apps.train --task_name $task --do_train  \
 ```
 
 ## Important Notes
-1. To run our code on multiple GPUs, you must `OMP_NUM_THREADS=1` before lunch our training code
+1. To run our code on multiple GPUs, you must `OMP_NUM_THREADS=1` before launch our training code
 2. By default we will cache the pre-trained model and tokenizer at `$HOME/.~DeBERTa`, you may need to clean it if the downloading failed unexpectedly.
 
 
