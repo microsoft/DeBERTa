@@ -123,7 +123,7 @@ class DeBERTa(torch.nn.Module):
 
     if self.z_steps>1:
       hidden_states = encoded_layers[-2]
-      layers = [self.encoder.layer[-1] for _ in range(z_steps)]
+      layers = [self.encoder.layer[-1] for _ in range(self.z_steps)]
       query_states = encoded_layers[-1]
       rel_embeddings = self.encoder.get_rel_embedding()
       attention_mask = self.encoder.get_attention_mask(attention_mask)
