@@ -55,7 +55,7 @@ def train_model(args, model, device, train_data, eval_data):
     return eval_metric
 
   def loss_fn(trainer, model, data):
-    _, loss = model(**data)
+    loss, _ = model(**data)
     return loss.mean(), data['input_ids'].size(0)
 
   trainer = DistributedTrainer(args, model, device, data_fn, loss_fn = loss_fn, eval_fn = eval_fn, dump_interval = args.dump_interval)
@@ -160,7 +160,7 @@ def run_eval(args, model, device, eval_data, prefix=None, tag=None, steps=None):
     for batch in tqdm(AsyncDataLoader(eval_dataloader), ncols=80, desc='Evaluating: {}'.format(prefix), disable=no_tqdm):
       batch = batch_to(batch, device)
       with torch.no_grad():
-        logits, tmp_eval_loss = model(**batch)
+        tmp_eval_loss, logits = model(**batch)
       label_ids = batch['labels'].to(device)
       predicts.append(logits)
       labels.append(label_ids)
@@ -195,7 +195,7 @@ def run_predict(args, model, device, eval_data, prefix=None):
     for batch in tqdm(AsyncDataLoader(eval_dataloader), ncols=80, desc='Evaluating: {}'.format(prefix), disable=args.rank>0):
       batch = batch_to(batch, device)
       with torch.no_grad():
-        logits, _ = model(**batch)
+        _, logits = model(**batch)
       if args.world_size>1:
         logits_all = [torch.zeros_like(logits) for _ in range(args.world_size)]
         torch.distributed.all_gather(logits_all, logits)

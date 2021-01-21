@@ -35,7 +35,7 @@ class SequenceClassificationModel(NNModule):
 
     self.classifier = torch.nn.Linear(output_dim, num_labels)
     drop_out = self.config.hidden_dropout_prob if drop_out is None else drop_out
-    self.dropout = StableDropout(drop_out)
+    self.dropout = StableDropout(drop_out) if config.use_xdropout else  torch.nn.Dropout(drop_out)
     self.apply(self.init_weights)
     self.bert.apply_state()
 
@@ -46,7 +46,7 @@ class SequenceClassificationModel(NNModule):
     pooled_output = self.dropout(pooled_output)
     logits = self.classifier(pooled_output)
 
-    loss = 0
+    loss = torch.tensor(0).to(logits)
     if labels is not None:
       if self.num_labels ==1:
         # regression task
@@ -68,4 +68,4 @@ class SequenceClassificationModel(NNModule):
         label_confidence = 1
         loss = -((log_softmax(logits)*labels).sum(-1)*label_confidence).mean()
 
-    return (logits,loss)
+    return (loss, logits)

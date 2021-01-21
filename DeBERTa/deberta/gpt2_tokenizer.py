@@ -15,8 +15,9 @@ import unicodedata
 import os
 from .gpt2_bpe_utils import get_encoder,_is_control,_is_whitespace,_is_punctuation
 from .cache_utils import load_vocab
+from transformers import PreTrainedTokenizer
 
-__all__ = ['GPT2Tokenizer']
+__all__ = ['GPT2Tokenizer', 'DebertaPreTrainedTokenizer']
 
 class GPT2Tokenizer(object):
   """ A wrapper of GPT2 tokenizer with similar interface as BERT tokenizer
@@ -214,3 +215,38 @@ class GPT2Tokenizer(object):
 
   def save_pretrained(self, path: str):
     torch.save(self.gpt2_encoder, path)
+
+class DebertaPreTrainedTokenizer(PreTrainedTokenizer):
+  def __init__(
+        self,
+        vocab_file=None,
+        do_lower_case=True,
+        unk_token="[UNK]",
+        sep_token="[SEP]",
+        pad_token="[PAD]",
+        cls_token="[CLS]",
+        mask_token="[MASK]",
+        **kwargs
+    ):
+        super().__init__(
+            unk_token=unk_token,
+            sep_token=sep_token,
+            pad_token=pad_token,
+            cls_token=cls_token,
+            mask_token=mask_token,
+            **kwargs,
+        )
+
+        self.GPT2Tokenizer = GPT2Tokenizer(vocab_file, do_lower_case, **kwargs)
+  
+  def _convert_token_to_id(self, token):
+    return self.GPT2Tokenizer.id(token)
+
+  def _tokenize(self, text, **kwargs):
+    """
+    Converts a string in a sequence of tokens (string), using the tokenizer.
+    Split in words for word-based vocabulary or sub-words for sub-word-based vocabularies
+    (BPE/SentencePieces/WordPieces).
+    Do NOT take care of added tokens.
+    """
+    return self.GPT2Tokenizer.tokenize(text)

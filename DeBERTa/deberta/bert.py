@@ -63,7 +63,7 @@ class BertSelfOutput(nn.Module):
     super().__init__()
     self.dense = nn.Linear(config.hidden_size, config.hidden_size)
     self.LayerNorm = BertLayerNorm(config.hidden_size, config.layer_norm_eps)
-    self.dropout = StableDropout(config.hidden_dropout_prob)
+    self.dropout = StableDropout(config.hidden_dropout_prob) if config.use_xdropout else nn.Dropout(config.hidden_dropout_prob)
     self.config = config
 
   def forward(self, hidden_states, input_states, mask=None):
@@ -110,7 +110,7 @@ class BertOutput(nn.Module):
     super(BertOutput, self).__init__()
     self.dense = nn.Linear(config.intermediate_size, config.hidden_size)
     self.LayerNorm = BertLayerNorm(config.hidden_size, config.layer_norm_eps)
-    self.dropout = StableDropout(config.hidden_dropout_prob)
+    self.dropout = StableDropout(config.hidden_dropout_prob) if config.use_xdropout else nn.Dropout(config.hidden_dropout_prob)
     self.config = config
 
   def forward(self, hidden_states, input_states, mask=None):
@@ -145,6 +145,7 @@ class BertEncoder(nn.Module):
   def __init__(self, config):
     super().__init__()
     layer = BertLayer(config)
+    # Set number of layers here
     self.layer = nn.ModuleList([copy.deepcopy(layer) for _ in range(config.num_hidden_layers)])
     self.relative_attention = getattr(config, 'relative_attention', False)
     if self.relative_attention:
@@ -160,7 +161,7 @@ class BertEncoder(nn.Module):
     if attention_mask.dim()<=2:
       extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
       attention_mask = extended_attention_mask*extended_attention_mask.squeeze(-2).unsqueeze(-1)
-      attention_mask = attention_mask.byte()
+      attention_mask = attention_mask.int()
     elif attention_mask.dim()==3:
       attention_mask = attention_mask.unsqueeze(1)
 
@@ -229,7 +230,7 @@ class BertEmbeddings(nn.Module):
     if self.embedding_size != config.hidden_size:
       self.embed_proj = nn.Linear(self.embedding_size, config.hidden_size, bias=False)
     self.LayerNorm = BertLayerNorm(config.hidden_size, config.layer_norm_eps)
-    self.dropout = StableDropout(config.hidden_dropout_prob)
+    self.dropout = StableDropout(config.hidden_dropout_prob) if config.use_xdropout else nn.Dropout(config.hidden_dropout_prob)
     self.output_to_half = False
     self.config = config
 
