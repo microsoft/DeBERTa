@@ -18,7 +18,32 @@ from zipfile import ZipFile
 from ..utils import get_logger
 logger = get_logger()
 
-def download_asset(name, tag=None, no_cache=False, cache_dir=None):
+__all__ = ['pretrained_models', 'load_model_state', 'load_vocab']
+
+class PretrainedModel:
+  def __init__(self, name, vocab, vocab_type, model='pytorch_model.bin', config='config.json', **kwargs):
+    self.__dict__.update(kwargs)
+    host = f'https://huggingface.co/microsoft/{name}/resolve/main/'
+    self.name = name
+    self.model_url = host + model
+    self.config_url = host + config
+    self.vocab_url = host + vocab
+    self.vocab_type = vocab_type
+  
+pretrained_models= {
+    'base': PretrainedModel('deberta-base', 'bpe_encoder.bin', 'gpt2'),
+    'large': PretrainedModel('deberta-large', 'bpe_encoder.bin', 'gpt2'),
+    'xlarge': PretrainedModel('deberta-xlarge', 'bpe_encoder.bin', 'gpt2'),
+    'base-mnli': PretrainedModel('deberta-base-mnli', 'bpe_encoder.bin', 'gpt2'),
+    'large-mnli': PretrainedModel('deberta-large-mnli', 'bpe_encoder.bin', 'gpt2'),
+    'xlarge-mnli': PretrainedModel('deberta-xlarge-mnli', 'bpe_encoder.bin', 'gpt2'),
+    'xlarge-v2': PretrainedModel('deberta-xlarge-v2', 'spm.model', 'spm'),
+    'xxlarge-v2': PretrainedModel('deberta-xxlarge-v2', 'spm.model', 'spm'),
+    'xlarge-v2-mnli': PretrainedModel('deberta-xlarge-v2-mnli', 'spm.model', 'spm'),
+    'xxlarge-v2-mnli': PretrainedModel('deberta-xxlarge-v2-mnli', 'spm.model', 'spm')
+  }
+
+def download_asset(url, name, tag=None, no_cache=False, cache_dir=None):
   _tag = tag
   if _tag is None:
     _tag = 'latest'
@@ -29,18 +54,7 @@ def download_asset(name, tag=None, no_cache=False, cache_dir=None):
   if os.path.exists(output) and (not no_cache):
     return output
 
-  repo = 'https://api.github.com/repos/microsoft/DeBERTa/releases'
-  releases = requests.get(repo).json()
-  if tag and tag != 'latest':
-    release = [r for r in releases if r['name'].lower()==tag.lower()]
-    if len(release)!=1:
-      raise Exception(f'{tag} can\'t be found in the repository.')
-  else:
-    release = releases[0]
-  asset = [s for s in release['assets'] if s['name'].lower()==name.lower()]
-  if len(asset)!=1:
-    raise Exception(f'{name} can\'t be found in the release.')
-  url = asset[0]['url']
+  #repo=f'https://huggingface.co/microsoft/deberta-{name}/blob/main/bpe_encoder.bin'
   headers = {}
   headers['Accept'] = 'application/octet-stream'
   resp = requests.get(url, stream=True, headers=headers)
@@ -60,64 +74,51 @@ def download_asset(name, tag=None, no_cache=False, cache_dir=None):
 
   return output
 
-def load_model_state(name, tag=None, no_cache=False, cache_dir=None):
-  model_path = name
-  if model_path and (not os.path.exists(model_path)) and not (('/' in model_path) or ('\\' in model_path)):
+def load_model_state(path_or_pretrained_id, tag=None, no_cache=False, cache_dir=None):
+  model_path = path_or_pretrained_id
+  if model_path and (not os.path.exists(model_path)) and (path_or_pretrained_id.lower() in pretrained_models):
     _tag = tag
+    pretrained = pretrained_models[path_or_pretrained_id.lower()]
     if _tag is None:
       _tag = 'latest'
     if not cache_dir:
-      cache_dir = os.path.join(pathlib.Path.home(), f'.~DeBERTa/assets/{_tag}/')
+      cache_dir = os.path.join(pathlib.Path.home(), f'.~DeBERTa/assets/{_tag}/{pretrained.name}')
     os.makedirs(cache_dir, exist_ok=True)
-    out_dir = os.path.join(cache_dir, name)
-    model_path = os.path.join(out_dir, 'pytorch.model.bin')
+    model_path = os.path.join(cache_dir, 'pytorch_model.bin')
     if (not os.path.exists(model_path)) or no_cache:
-      asset = download_asset(name + '.zip', tag=tag, no_cache=no_cache, cache_dir=cache_dir)
-      with ZipFile(asset, 'r') as zipf:
-        for zip_info in zipf.infolist():
-          if zip_info.filename[-1] == '/':
-            continue
-          zip_info.filename = os.path.basename(zip_info.filename)
-          zipf.extract(zip_info, out_dir)
+      asset = download_asset(pretrained.model_url, 'pytorch_model.bin', tag=tag, no_cache=no_cache, cache_dir=cache_dir)
+      asset = download_asset(pretrained.config_url, 'model_config.json', tag=tag, no_cache=no_cache, cache_dir=cache_dir)
   elif not model_path:
     return None,None
 
   config_path = os.path.join(os.path.dirname(model_path), 'model_config.json')
   model_state = torch.load(model_path, map_location='cpu')
-  logger.info("Loaded pre-trained model file {}".format(model_path))
+  logger.info("Loaded pretrained model file {}".format(model_path))
   if 'config' in model_state:
     model_config = ModelConfig.from_dict(model_state['config'])
   elif os.path.exists(config_path):
     model_config = ModelConfig.from_json_file(config_path)
   return model_state, model_config
 
-def load_vocab(name=None, tag=None, no_cache=False, cache_dir=None):
-  if name is None:
-    name = 'bpe_encoder'
-
-  model_path = name
-  if model_path and (not os.path.exists(model_path)) and not (('/' in model_path) or ('\\' in model_path)):
+def load_vocab(vocab_path=None, vocab_type=None, pretrained_id=None, tag=None, no_cache=False, cache_dir=None):
+  if pretrained_id and (pretrained_id.lower() in pretrained_models):
     _tag = tag
     if _tag is None:
       _tag = 'latest'
-    if not cache_dir:
-      cache_dir = os.path.join(pathlib.Path.home(), f'.~DeBERTa/assets/{_tag}/')
-    os.makedirs(cache_dir, exist_ok=True)
-    out_dir = os.path.join(cache_dir, name)
-    model_path =os.path.join(out_dir, 'bpe_encoder.bin')
-    if (not os.path.exists(model_path)) or no_cache:
-      asset = download_asset(name + '.zip', tag=tag, no_cache=no_cache, cache_dir=cache_dir)
-      with ZipFile(asset, 'r') as zipf:
-        for zip_info in zipf.infolist():
-          if zip_info.filename[-1] == '/':
-            continue
-          zip_info.filename = os.path.basename(zip_info.filename)
-          zipf.extract(zip_info, out_dir)
-  elif not model_path:
-    return None,None
 
-  encoder_state = torch.load(model_path)
-  return encoder_state
+    pretrained = pretrained_models[pretrained_id.lower()]
+    if not cache_dir:
+      cache_dir = os.path.join(pathlib.Path.home(), f'.~DeBERTa/assets/{_tag}/{pretrained.name}')
+    os.makedirs(cache_dir, exist_ok=True)
+    vocab_type = pretrained.vocab_type
+    url = pretrained.vocab_url
+    outname = os.path.basename(url)
+    vocab_path =os.path.join(cache_dir, outname)
+    if (not os.path.exists(vocab_path)) or no_cache:
+      asset = download_asset(url, outname, tag=tag, no_cache=no_cache, cache_dir=cache_dir)
+  if vocab_type is None:
+    vocab_type = 'spm'
+  return vocab_path, vocab_type
 
 def test_download():
   vocab = load_vocab()

@@ -3,25 +3,52 @@
 This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**e**nhanced **BERT** with Disentangled **A**ttention ](https://arxiv.org/abs/2006.03654)
 
 ## News
+### 2/03/2021
+DeBERTa v2 code and the **900M, 1.5B** [model](https://huggingface.co/models?search=microsoft%2Fdeberta) are here now. This includes the 1.5B model used for our SuperGLUE single-model submission and achieving 89.9, versus human baseline 89.8. You can find more details about this submission in our [blog](https://www.microsoft.com/en-us/research/blog/microsoft-deberta-surpasses-human-performance-on-the-superglue-benchmark/)
+
+#### What's new in v2
+- **Vocabulary** In v2 we use a new vocabulary of size 128K built from the training data. Instead of GPT2 tokenizer, we use [sentencepiece](https://github.com/google/sentencepiece) tokenizer.
+- **nGiE(nGram Induced Input Encoding)** In v2 we use an additional convolution layer aside with the first transformer layer to better learn the local dependency of input tokens. We will add more ablation studies on this feature.
+- **Sharing position projection matrix with content projection matrix in attention layer** Based on our previous experiment, we found this can save parameters without affecting the performance.
+- **Apply bucket to encode relative postions** In v2 we use log bucket to encode relative positions similar to T5. 
+- **900M model & 1.5B model** In v2 we scale our model size to 900M and 1.5B which significantly improves the performance of downstream tasks.
+
 ### 12/29/2020
 With DeBERTa 1.5B model, we surpass T5 11B model and human performance on SuperGLUE leaderboard. Code and model will be released soon. Please check out our paper for more details.
 
 ### 06/13/2020
 We released the pre-trained models, source code, and fine-tuning scripts to reproduce some of the experimental results in the paper. You can follow similar scripts to apply DeBERTa to your own experiments or applications. Pre-training scripts will be released in the next step. 
 
+## TODOs
+- [ ] Add SuperGLUE tasks
+- [ ] Add SiFT code
+- [ ] Add Pretraining code
+
+
 ## Introduction to DeBERTa 
 DeBERTa (Decoding-enhanced BERT with disentangled attention) improves the BERT and RoBERTa models using two novel techniques. The first is the disentangled attention mechanism, where each word is represented using two vectors that encode its content and position, respectively, and the attention weights among words are computed using disentangled matrices on their contents and relative positions. Second, an enhanced mask decoder is used to replace the output softmax layer to predict the masked tokens for model pretraining. We show that these two techniques significantly improve the efficiency of model pre-training and performance of downstream tasks.
 
 # Pre-trained Models
 
-Our pre-trained models are packaged into zipped files. You can download them from our [releasements](https://github.com/microsoft/DeBERTa/releases), or download an individual model via the links below:
-- [Large](https://github.com/microsoft/DeBERTa/releases/download/v0.1/large.zip): the pre-trained Large model
-- [Base](https://github.com/microsoft/DeBERTa/releases/download/v0.1/base.zip) : the pre-trained Base model
-- [Large MNLI](https://github.com/microsoft/DeBERTa/releases/download/v0.1/large_mnli.zip): Large model fine-tuned with MNLI task
-- [Base MNLI](https://github.com/microsoft/DeBERTa/releases/download/v0.1/base_mnli.zip): Base model fine-tuned with MNLI task
+Our pre-trained models are packaged into zipped files. You can download them from our [releases](https://huggingface.co/models?search=microsoft%2Fdeberta), or download an individual model via the links below:
 
+|Model        | Parameters| Hidden Size | Layers| Note|
+|-------------|------|-----|-----|---------|
+|**[XXLarge-V2](https://huggingface.co/microsoft/deberta-xxlarge-v2)<sup>1</sup>**|1.5B|1536| 48|128K new SPM vocab |
+|[XLarge-V2](https://huggingface.co/microsoft/deberta-xlarge-v2)|900M|1536| 24| 128K new SPM vocab|
+|[XLarge](https://huggingface.co/microsoft/deberta-xlarge)|750M|1024|48| Same vocab as RoBERTa|
+|[Large](https://huggingface.co/microsoft/deberta-large)|400M|1024|24|Same vocab as RoBERTa|
+|[Base](https://huggingface.co/microsoft/deberta-base)|140M|768|12|Same vocab as RoBERTa|
+|[XXLarge-V2-MNLI](https://huggingface.co/microsoft/deberta-xxlarge-v2-mnli)|1.5B|1536| 48|Fine-turned with MNLI |
+|[XLarge-V2-MNLI](https://huggingface.co/microsoft/deberta-xlarge-v2-mnli)|900M|1536| 24|Fine-turned with MNLI |
+|[XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli)|750M|1024|48|Fine-turned with MNLI|
+|[Large-MNLI](https://huggingface.co/microsoft/deberta-large-mnli)|400M|1024|24|Fine-turned with MNLI|
+|[Base-MNLI](https://huggingface.co/microsoft/deberta-base-mnli)|140M|768|12|Fine-turned with MNLI|
 
-# Try the code
+## Note 
+- 1 This is the model(89.9) that surpassed **T5 11B(89.3) and human performance(89.8)** on **SuperGLUE** for the first time. 128K new SPM vocab. 
+
+# Try the model
 
 Read our [documentation](https://deberta.readthedocs.io/en/latest/)
 
@@ -37,6 +64,7 @@ Read our [documentation](https://deberta.readthedocs.io/en/latest/)
 
 There are several ways to try our code,
 ### Use docker
+
 Docker is the recommended way to run the code as we already built every dependency into the our docker [bagai/deberta](https://hub.docker.com/r/bagai/deberta) and you can follow the [docker official site](https://docs.docker.com/engine/install/ubuntu/) to install docker on your machine.
 
 To run with docker, make sure your system fullfil the requirements in the above list. Here are the steps to try the GLUE experiments: Pull the code, run `./run_docker.sh` 
@@ -60,11 +88,11 @@ class MyModel(torch.nn.Module):
   def __init__(self):
     super().__init__()
     # Your existing model code
-    self.bert = deberta.DeBERTa(pre_trained='base') # Or 'large' or 'base_mnli' or 'large_mnli'
+    self.deberta = deberta.DeBERTa(pre_trained='base') # Or 'large' 'base-mnli' 'large-mnli' 'xlarge' 'xlarge-mnli' 'xlarge-v2' 'xxlarge-v2'
     # Your existing model code
     # do inilization as before
     # 
-    self.bert.apply_state() # Apply the pre-trained model of DeBERTa at the end of the constructor
+    self.deberta.apply_state() # Apply the pre-trained model of DeBERTa at the end of the constructor
     #
   def forward(self, input_ids):
     # The inputs to DeBERTa forward are
@@ -78,11 +106,12 @@ class MyModel(torch.nn.Module):
     #   - If it's an attention mask then if will be torch.LongTensor of shape [batch_size, sequence_length, sequence_length]. 
     #      In this case, it's a mask indicate which tokens in the sequence should be attended by other tokens in the sequence. 
     # `output_all_encoded_layers`: whether to output results of all encoder layers, default, True
-    encoding = self.bert(input_ids)[-1]
+    encoding = deberta.bert(input_ids)[-1]
 
 # 2. Change your tokenizer with the the tokenizer built in DeBERta
 from DeBERTa import deberta
-tokenizer = deberta.GPT2Tokenizer()
+vocab_path, vocab_type = deberta.load_vocab(pretrained_id='base')
+tokenizer = deberta.tokenizers[vocab_type](vocab_path)
 # We apply the same schema of special tokens as BERT, e.g. [CLS], [SEP], [MASK]
 max_seq_len = 512
 tokens = tokenizer.tokenize('Examples input text of DeBERTa')
@@ -108,7 +137,8 @@ For glue tasks,
 1. Get the data
 ``` bash
 cache_dir=/tmp/DeBERTa/
-curl -J -L https://raw.githubusercontent.com/nyu-mll/jiant/master/scripts/download_glue_data.py | python3 - --data_dir $cache_dir/glue_tasks
+cd experiments/glue
+./download_data.sh  $cache_dir/glue_tasks
 ```
 
 2. Run task
@@ -117,7 +147,7 @@ curl -J -L https://raw.githubusercontent.com/nyu-mll/jiant/master/scripts/downlo
 task=STS-B 
 OUTPUT=/tmp/DeBERTa/exps/$task
 export OMP_NUM_THREADS=1
-python3 -m DeBERTa.apps.train --task_name $task --do_train  \
+python3 -m DeBERTa.apps.run --task_name $task --do_train  \
   --data_dir $cache_dir/glue_tasks/$task \
   --eval_batch_size 128 \
   --predict_batch_size 128 \
@@ -132,10 +162,9 @@ python3 -m DeBERTa.apps.train --task_name $task --do_train  \
   --max_seq_len 128
 ```
 
-## Important Notes
-1. To run our code on multiple GPUs, you must `OMP_NUM_THREADS=1` before launch our training code
-2. By default we will cache the pre-trained model and tokenizer at `$HOME/.~DeBERTa`, you may need to clean it if the downloading failed unexpectedly.
-
+## Notes
+- 1. By default we will cache the pre-trained model and tokenizer at `$HOME/.~DeBERTa`, you may need to clean it if the downloading failed unexpectedly.
+- 2. You can also try our models with [HF Transformers](https://github.com/huggingface/transformers). But when you try XXLarge model you need to specify --sharded_ddp argument. Please check our [XXLarge model card](https://huggingface.co/microsoft/deberta-xxlarge-v2) for more details.
 
 ## Experiments
 Our fine-tuning experiments are carried on half a DGX-2 node with 8x32 V100 GPU cards, the results may vary due to different GPU models, drivers, CUDA SDK versions, using FP16 or FP32, and random seeds. 
@@ -143,22 +172,44 @@ We report our numbers based on multple runs with different random seeds here. He
 
 |Task	 |Command	|Results	|Running Time(8x32G V100 GPUs)|
 |--------|---------------|---------------|-------------------------|
-|MNLI xlarge|	`experiments/glue/mnli_xlarge.sh`|	91.5/91.4 +/-0.1|	2.5h|
-|MNLI large|	`experiments/glue/mnli_large.sh`|	91.2/91.0 +/-0.1|	2.5h|
-|QQP large|	`experiments/glue/qqp_large.sh`|	92.3 +/-0.1|		6h|
-|QNLI large|	`experiments/glue/qnli_large.sh`|	95.3 +/-0.2|		2h|
-|MRPC large|	`experiments/glue/mrpc_large.sh`|	93.4 +/-0.5|		0.5h|
-|RTE large|	`experiments/glue/rte_large.sh`|	87.7 +/-1.0|		0.5h|
-|SST-2 large|	`experiments/glue/sst2_large.sh`|	96.7 +/-0.3|		1h|
-|STS-b large|	`experiments/glue/Stsb_large.sh`|	92.5 +/-0.3|		0.5h|
-|CoLA large|	`experiments/glue/cola_large.sh`|	70.5 +/-1.0|		0.5h|
+|**MNLI xxlarge v2**|	`experiments/glue/mnli.sh xxlarge-v2`|	**91.7/91.9** +/-0.1|	4h|
+|MNLI xlarge v2|	`experiments/glue/mnli.sh xlarge-v2`|	91.7/91.6 +/-0.1|	2.5h|
+|MNLI xlarge|	`experiments/glue/mnli.sh xlarge`|	91.5/91.2 +/-0.1|	2.5h|
+|MNLI large|	`experiments/glue/mnli.sh large`|	91.3/91.1 +/-0.1|	2.5h|
+|QQP large|	`experiments/glue/qqp.sh large`|	92.3 +/-0.1|		6h|
+|QNLI large|	`experiments/glue/qnli.sh large`|	95.3 +/-0.2|		2h|
+|MRPC large|	`experiments/glue/mrpc.sh large`|	91.9 +/-0.5|		0.5h|
+|RTE large|	`experiments/glue/rte.sh large`|	86.6 +/-1.0|		0.5h|
+|SST-2 large|	`experiments/glue/sst2.sh large`|	96.7 +/-0.3|		1h|
+|STS-b large|	`experiments/glue/Stsb.sh large`|	92.5 +/-0.3|		0.5h|
+|CoLA large|	`experiments/glue/cola.sh`|	70.5 +/-1.0|		0.5h|
 
 And here are the results from the Base model
 
 |Task	 |Command	|Results	|Running Time(8x32G V100 GPUs)|
 |--------|---------------|---------------|-------------------------|
-|MNLI base|	`experiments/glue/mnli_base.sh`|	88.8/88.5 +/-0.2|	1.5h|
+|MNLI base|	`experiments/glue/mnli.sh base`|	88.8/88.5 +/-0.2|	1.5h|
 
+
+#### Fine-tuning on NLU tasks
+
+We present the dev results on SQuAD 1.1/2.0 and several GLUE benchmark tasks.
+
+| Model                     | SQuAD 1.1 | SQuAD 2.0 | MNLI-m/mm   | SST-2 | QNLI | CoLA | RTE    | MRPC  | QQP   |STS-B |
+|---------------------------|-----------|-----------|-------------|-------|------|------|--------|-------|-------|------|
+|                           | F1/EM     | F1/EM     | Acc         | Acc   | Acc  | MCC  | Acc    |Acc/F1 |Acc/F1 |P/S   |
+| BERT-Large                | 90.9/84.1 | 81.8/79.0 | 86.6/-      | 93.2  | 92.3 | 60.6 | 70.4   | 88.0/-       | 91.3/- |90.0/- |
+| RoBERTa-Large             | 94.6/88.9 | 89.4/86.5 | 90.2/-      | 96.4  | 93.9 | 68.0 | 86.6   | 90.9/-       | 92.2/- |92.4/- |
+| XLNet-Large               | 95.1/89.7 | 90.6/87.9 | 90.8/-      | 97.0  | 94.9 | 69.0 | 85.9   | 90.8/-       | 92.3/- |92.5/- |
+| [DeBERTa-Large](https://huggingface.co/microsoft/deberta-large)<sup>1</sup> | 95.5/90.1 | 90.7/88.0 | 91.3/91.1| 96.5|95.3| 69.5| 91.0| 92.6/94.6| 92.3/- |92.8/92.5 |
+| [DeBERTa-XLarge](https://huggingface.co/microsoft/deberta-xlarge)<sup>1</sup> | -/-  | -/-  | 91.5/91.2| 97.0 | - | -    | 93.1   | 92.1/94.3    | -    |92.9/92.7|
+| [DeBERTa-XLarge-V2](https://huggingface.co/microsoft/deberta-xlarge-v2)<sup>1</sup>|95.8/90.8| 91.4/88.9|91.7/91.6| **97.5**| 95.8|71.1|**93.9**|92.0/94.2|92.3/89.8|92.9/92.9|
+|**[DeBERTa-XXLarge-V2](https://huggingface.co/microsoft/deberta-xxlarge-v2)<sup>1</sup>**|**96.1/91.4**|**92.2/89.7**|**91.7/91.9**|97.2|**96.0**|**72.0**| 93.5| **93.1/94.9**|**92.7/90.3** |**93.2/93.1** |
+--------
+##### Notes.
+ - <sup>1</sup> Following RoBERTa, for RTE, MRPC, STS-B, we fine-tune the tasks based on [DeBERTa-Large-MNLI](https://huggingface.co/microsoft/deberta-large-mnli), [DeBERTa-XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli), [DeBERTa-XLarge-V2-MNLI](https://huggingface.co/microsoft/deberta-xlarge-v2-mnli), [DeBERTa-XXLarge-V2-MNLI](https://huggingface.co/microsoft/deberta-xxlarge-v2-mnli). The results of SST-2/QQP/QNLI/SQuADv2 will also be slightly improved when start from MNLI fine-tuned models, however, we only report the numbers fine-tuned from pretrained base models for those 4 tasks.
+ 
+ 
 ## Contacts
 
 Pengcheng He(penhe@microsoft.com), Xiaodong Liu(xiaodl@microsoft.com), Jianfeng Gao(jfgao@microsoft.com), Weizhu Chen(wzchen@microsoft.com)

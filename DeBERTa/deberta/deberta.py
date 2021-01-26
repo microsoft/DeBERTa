@@ -16,6 +16,7 @@ from .ops import *
 from .bert import *
 from .config import ModelConfig
 from .cache_utils import load_model_state
+import pdb
 
 __all__ = ['DeBERTa']
 
@@ -36,11 +37,6 @@ class DeBERTa(torch.nn.Module):
 
   def __init__(self, config=None, pre_trained=None):
     super().__init__()
-    if config:
-      self.z_steps = getattr(config, 'z_steps', 0)
-    else:
-      self.z_steps = 0
-
     state = None
     if pre_trained is not None:
       state, model_config = load_model_state(pre_trained)
@@ -121,17 +117,6 @@ class DeBERTa(torch.nn.Module):
     if return_att:
       encoded_layers, att_matrixs = encoded_layers
 
-    if self.z_steps>1:
-      hidden_states = encoded_layers[-2]
-      layers = [self.encoder.layer[-1] for _ in range(self.z_steps)]
-      query_states = encoded_layers[-1]
-      rel_embeddings = self.encoder.get_rel_embedding()
-      attention_mask = self.encoder.get_attention_mask(attention_mask)
-      rel_pos = self.encoder.get_rel_pos(embedding_output)
-      for layer in layers[1:]:
-        query_states = layer(hidden_states, attention_mask, return_att=False, query_states = query_states, relative_pos=rel_pos, rel_embeddings=rel_embeddings)
-        encoded_layers.append(query_states)
-
     if not output_all_encoded_layers:
       encoded_layers = encoded_layers[-1:]
 
@@ -161,3 +146,4 @@ class DeBERTa(torch.nn.Module):
     for c in current.keys():
       current[c] = state[key_match(c, state.keys())]
     self.load_state_dict(current)
+  

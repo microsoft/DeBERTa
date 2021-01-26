@@ -59,7 +59,7 @@ class GPT2Tokenizer(object):
     self.sep_token_id = self.add_symbol(self.sep_token)
     self.unk_token_id = self.add_symbol(self.unk_token)
 
-    self.gpt2_encoder = load_vocab(vocab_file)
+    self.gpt2_encoder = torch.load(vocab_file)
     self.bpe = get_encoder(self.gpt2_encoder['encoder'], self.gpt2_encoder['vocab'])
     for w,n in self.gpt2_encoder['dict_map']:
       self.add_symbol(w, n)

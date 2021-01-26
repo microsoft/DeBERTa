@@ -19,50 +19,15 @@ import pdb
 import json
 from .ops import *
 from .disentangled_attention import *
+from .da_utils import *
 
-__all__ = ['BertEncoder', 'BertEmbeddings', 'ACT2FN', 'BertLayerNorm']
-
-def gelu(x):
-  """Implementation of the gelu activation function.
-    For information: OpenAI GPT's gelu is slightly different (and gives slightly different results):
-    0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
-  """
-  return x * 0.5 * (1.0 + torch.erf(x / math.sqrt(2.0)))
-
-
-def swish(x):
-  return x * torch.sigmoid(x)
-
-def linear_act(x):
-  return x
-
-ACT2FN = {"gelu": gelu, "relu": torch.nn.functional.relu, "swish": swish, "tanh": torch.nn.functional.tanh, "linear": linear_act, 'sigmoid': torch.sigmoid}
-
-class BertLayerNorm(nn.Module):
-  """LayerNorm module in the TF style (epsilon inside the square root).
-  """
-
-  def __init__(self, size, eps=1e-12):
-    super().__init__()
-    self.weight = nn.Parameter(torch.ones(size))
-    self.bias = nn.Parameter(torch.zeros(size))
-    self.variance_epsilon = eps
-
-  def forward(self, x):
-    input_type = x.dtype
-    x = x.float()
-    u = x.mean(-1, keepdim=True)
-    s = (x - u).pow(2).mean(-1, keepdim=True)
-    x = (x - u) / torch.sqrt(s + self.variance_epsilon)
-    x = x.to(input_type)
-    y = self.weight * x + self.bias
-    return y
+__all__ = ['BertEncoder', 'BertEmbeddings', 'ACT2FN', 'LayerNorm']
 
 class BertSelfOutput(nn.Module):
   def __init__(self, config):
     super().__init__()
     self.dense = nn.Linear(config.hidden_size, config.hidden_size)
-    self.LayerNorm = BertLayerNorm(config.hidden_size, config.layer_norm_eps)
+    self.LayerNorm = LayerNorm(config.hidden_size, config.layer_norm_eps)
     self.dropout = StableDropout(config.hidden_dropout_prob)
     self.config = config
 
@@ -81,9 +46,8 @@ class BertAttention(nn.Module):
     self.config = config
 
   def forward(self, hidden_states, attention_mask, return_att=False, query_states=None, relative_pos=None, rel_embeddings=None):
-    self_output = self.self(hidden_states, attention_mask, return_att, query_states=query_states, relative_pos=relative_pos, rel_embeddings=rel_embeddings)
-    if return_att:
-      self_output, att_matrix = self_output
+    output = self.self(hidden_states, attention_mask, return_att, query_states=query_states, relative_pos=relative_pos, rel_embeddings=rel_embeddings)
+    self_output, att_matrix, att_logits_=output['hidden_states'], output['attention_probs'], output['attention_logits']
     if query_states is None:
       query_states = hidden_states
     attention_output = self.output(self_output, query_states, attention_mask)
@@ -109,7 +73,7 @@ class BertOutput(nn.Module):
   def __init__(self, config):
     super(BertOutput, self).__init__()
     self.dense = nn.Linear(config.intermediate_size, config.hidden_size)
-    self.LayerNorm = BertLayerNorm(config.hidden_size, config.layer_norm_eps)
+    self.LayerNorm = LayerNorm(config.hidden_size, config.layer_norm_eps)
     self.dropout = StableDropout(config.hidden_dropout_prob)
     self.config = config
 
@@ -139,6 +103,29 @@ class BertLayer(nn.Module):
     else:
       return layer_output
 
+class ConvLayer(nn.Module):
+    def __init__(self, config):
+      super().__init__()
+      kernel_size = getattr(config, 'conv_kernel_size', 3)
+      groups = getattr(config, 'conv_groups', 1)
+      self.conv_act = getattr(config, 'conv_act', 'tanh')
+      self.conv = torch.nn.Conv1d(config.hidden_size, config.hidden_size, kernel_size, padding = (kernel_size-1)//2, groups = groups)
+      self.LayerNorm = LayerNorm(config.hidden_size, config.layer_norm_eps)
+      self.dropout = StableDropout(config.hidden_dropout_prob)
+      self.config = config
+
+    def forward(self, hidden_states, residual_states, input_mask):
+        out = self.conv(hidden_states.permute(0,2,1).contiguous()).permute(0,2,1).contiguous()
+        if version.Version(torch.__version__) >= version.Version('1.2.0a'):
+            rmask = (1-input_mask).bool()
+        else:
+            rmask = (1-input_mask).byte()
+        out.masked_fill_(rmask.unsqueeze(-1).expand(out.size()), 0)
+        out = ACT2FN[self.conv_act](self.dropout(out))
+        output_states = MaskedLayerNorm(self.LayerNorm, residual_states + out, input_mask)
+
+        return output_states
+
 class BertEncoder(nn.Module):
   """ Modified BertEncoder with relative position bias support
   """
@@ -151,9 +138,25 @@ class BertEncoder(nn.Module):
       self.max_relative_positions = getattr(config, 'max_relative_positions', -1)
       if self.max_relative_positions <1:
         self.max_relative_positions = config.max_position_embeddings
-      self.rel_embeddings = nn.Embedding(self.max_relative_positions*2, config.hidden_size)
+      self.position_buckets = getattr(config, 'position_buckets', -1)
+      pos_ebd_size = self.max_relative_positions*2
+      if self.position_buckets>0:
+        pos_ebd_size = self.position_buckets*2
+      self.rel_embeddings = nn.Embedding(pos_ebd_size, config.hidden_size)
+
+    self.norm_rel_ebd = [x.strip() for x in getattr(config, 'norm_rel_ebd', 'none').lower().split('|')]
+    if 'layer_norm' in self.norm_rel_ebd:
+      self.LayerNorm = LayerNorm(config.hidden_size, config.layer_norm_eps, elementwise_affine = True)
+    kernel_size = getattr(config, 'conv_kernel_size', 0)
+    self.with_conv = False
+    if kernel_size > 0:
+      self.with_conv = True
+      self.conv = ConvLayer(config)
+
   def get_rel_embedding(self):
     rel_embeddings = self.rel_embeddings.weight if self.relative_attention else None
+    if rel_embeddings is not None and ('layer_norm' in self.norm_rel_ebd):
+      rel_embeddings = self.LayerNorm(rel_embeddings)
     return rel_embeddings
 
   def get_attention_mask(self, attention_mask):
@@ -169,10 +172,14 @@ class BertEncoder(nn.Module):
   def get_rel_pos(self, hidden_states, query_states=None, relative_pos=None):
     if self.relative_attention and relative_pos is None:
       q = query_states.size(-2) if query_states is not None else hidden_states.size(-2)
-      relative_pos = build_relative_position(q, hidden_states.size(-2), hidden_states.device)
+      relative_pos = build_relative_position(q, hidden_states.size(-2), bucket_size = self.position_buckets, max_position=self.max_relative_positions)
     return relative_pos
 
   def forward(self, hidden_states, attention_mask, output_all_encoded_layers=True, return_att=False, query_states = None, relative_pos=None):
+    if attention_mask.dim()<=2:
+      input_mask = attention_mask
+    else:
+      input_mask = (attention_mask.sum(-2)>0).byte()
     attention_mask = self.get_attention_mask(attention_mask)
     relative_pos = self.get_rel_pos(hidden_states, query_states, relative_pos)
 
@@ -187,6 +194,10 @@ class BertEncoder(nn.Module):
       output_states = layer_module(next_kv, attention_mask, return_att, query_states = query_states, relative_pos=relative_pos, rel_embeddings=rel_embeddings)
       if return_att:
         output_states, att_m = output_states
+
+      if i == 0 and self.with_conv:
+        prenorm = output_states #output['prenorm_states']
+        output_states = self.conv(hidden_states, prenorm, input_mask)
 
       if query_states is not None:
         query_states = output_states
@@ -228,7 +239,7 @@ class BertEmbeddings(nn.Module):
     
     if self.embedding_size != config.hidden_size:
       self.embed_proj = nn.Linear(self.embedding_size, config.hidden_size, bias=False)
-    self.LayerNorm = BertLayerNorm(config.hidden_size, config.layer_norm_eps)
+    self.LayerNorm = LayerNorm(config.hidden_size, config.layer_norm_eps)
     self.dropout = StableDropout(config.hidden_dropout_prob)
     self.output_to_half = False
     self.config = config

@@ -9,6 +9,8 @@ tqdm
 ujson
 seqeval
 psutil
+sentencepiece
+laser
 #GitPython
 torch
 #torchvision

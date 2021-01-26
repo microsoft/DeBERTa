@@ -130,4 +130,5 @@ class NNModule(nn.Module):
         if child is not None:
           load(child, prefix + name + '.')
     load(model)
+    logger.warning(f'Missing keys: {missing_keys}, unexpected_keys: {unexpected_keys}, error_msgs: {error_msgs}')
     return model

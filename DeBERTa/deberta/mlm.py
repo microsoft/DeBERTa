@@ -10,7 +10,7 @@ import torch
 from torch import nn
 import pdb
 
-from .bert import BertLayerNorm,ACT2FN
+from .bert import LayerNorm,ACT2FN
 
 __all__ = ['MLMPredictionHead']
 
@@ -22,7 +22,7 @@ class MLMPredictionHead(nn.Module):
         self.transform_act_fn = ACT2FN[config.hidden_act] \
             if isinstance(config.hidden_act, str) else config.hidden_act
 
-        self.LayerNorm = BertLayerNorm(self.embedding_size, config.layer_norm_eps)
+        self.LayerNorm = LayerNorm(self.embedding_size, config.layer_norm_eps)
         self.bias = nn.Parameter(torch.zeros(vocab_size))
         self.pre_norm = PreLayerNorm(config)
 
