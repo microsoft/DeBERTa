@@ -10,6 +10,7 @@
 import math
 from packaging import version
 import torch
+from torch.nn import LayerNorm
 from ..utils.jit_tracing import traceable
 
 if version.Version(torch.__version__) >= version.Version('1.0.0'):
@@ -17,7 +18,7 @@ if version.Version(torch.__version__) >= version.Version('1.0.0'):
 else:
   from torch import softmax_backward_data as _softmax_backward_data
 
-__all__ = ['StableDropout', 'MaskedLayerNorm', 'XSoftmax']
+__all__ = ['StableDropout', 'MaskedLayerNorm', 'XSoftmax', 'ACT2FN', 'LayerNorm']
 
 @traceable
 class XSoftmax(torch.autograd.Function):
@@ -170,7 +171,7 @@ def MaskedLayerNorm(layerNorm, input, mask = None):
   """ Masked LayerNorm which will apply mask over the output of LayerNorm to avoid inaccurate updatings to the LayerNorm module.
   
   Args:
-    layernorm (:obj:`~DeBERTa.deberta.BertLayerNorm`): LayerNorm module or function
+    layernorm (:obj:`~DeBERTa.deberta.LayerNorm`): LayerNorm module or function
     input (:obj:`torch.tensor`): The input tensor
     mask (:obj:`torch.IntTensor`): The mask to applied on the output of LayerNorm where `0` indicate the output of that element will be ignored, i.e. set to `0`
 
@@ -179,7 +180,7 @@ def MaskedLayerNorm(layerNorm, input, mask = None):
     # Create a tensor b x n x d
     x = torch.randn([1,10,100])
     m = torch.tensor([[1,1,1,0,0,0,0,0,0,0]], dtype=torch.int)
-    LayerNorm = DeBERTa.deberta.BertLayerNorm(100)
+    LayerNorm = DeBERTa.deberta.LayerNorm(100)
     y = MaskedLayerNorm(LayerNorm, x, m)
 
   """
@@ -192,3 +193,21 @@ def MaskedLayerNorm(layerNorm, input, mask = None):
     mask = mask.unsqueeze(2)
   mask = mask.to(output.dtype)
   return output*mask
+
+def gelu(x):
+  """Implementation of the gelu activation function.
+    For information: OpenAI GPT's gelu is slightly different (and gives slightly different results):
+    0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
+  """
+  return x * 0.5 * (1.0 + torch.erf(x / math.sqrt(2.0)))
+
+
+def swish(x):
+  return x * torch.sigmoid(x)
+
+def linear_act(x):
+  return x
+
+ACT2FN = {"gelu": gelu, "relu": torch.nn.functional.relu, "swish": swish, "tanh": torch.tanh, "linear": linear_act, 'sigmoid': torch.sigmoid}
+
+

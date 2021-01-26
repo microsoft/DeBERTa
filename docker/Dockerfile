@@ -1,7 +1,8 @@
 # This is the docker file built for GLUE task
 FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
 RUN apt-get update && apt-get install -y vim gawk wget software-properties-common vim-addon-manager locales gdb 
-RUN apt-get update && apt-get install -y python3.6 python3.6-dev python3.6-doc python3.6-dbg python-distutils
+RUN apt-get update && apt-get install -y python3.6 python3.6-dev python3.6-doc python3.6-dbg 
+#python-distutils
 ENV  LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_TYPE="en_US.UTF-8" TERM=xterm-256color
 RUN locale-gen en_US en_US.UTF-8
 
