@@ -17,18 +17,24 @@ import math
 
 from ...deberta import *
 from ...utils import *
-import pdb
 
 __all__ = ['MultiChoiceModel']
 class MultiChoiceModel(NNModule):
   def __init__(self, config, num_labels = 2, drop_out=None, **kwargs):
     super().__init__(config)
-    self.deberta = DeBERTa(config)
     self.num_labels = num_labels
-    self.classifier = torch.nn.Linear(config.hidden_size, 1)
+    self._register_load_state_dict_pre_hook(self._pre_load_hook)
+    self.deberta = DeBERTa(config)
+    self.config = config
+    pool_config = PoolConfig(self.config)
+    output_dim = self.deberta.config.hidden_size
+    self.pooler = ContextPooler(pool_config)
+    output_dim = self.pooler.output_dim()
     drop_out = config.hidden_dropout_prob if drop_out is None else drop_out
+    self.classifier = torch.nn.Linear(output_dim, 1)
     self.dropout = StableDropout(drop_out)
     self.apply(self.init_weights)
+    self.deberta.apply_state()
 
   def forward(self, input_ids, type_ids=None, input_mask=None, labels=None, position_ids=None, **kwargs):
     num_opts = input_ids.size(1)
@@ -41,16 +47,9 @@ class MultiChoiceModel(NNModule):
       input_mask = input_mask.view([-1, input_mask.size(-1)])
     encoder_layers = self.deberta(input_ids, token_type_ids=type_ids, attention_mask=input_mask,
         position_ids=position_ids, output_all_encoded_layers=True)
-    seqout = encoder_layers[-1]
-    cls = seqout[:,:1,:]
-    cls = cls/math.sqrt(seqout.size(-1))
-    att_score = torch.matmul(cls, seqout.transpose(-1,-2))
-    att_mask = input_mask.unsqueeze(1).to(att_score)
-    att_score = att_mask*att_score + (att_mask-1)*10000.0
-    att_score = torch.nn.functional.softmax(att_score, dim=-1)
-    pool = torch.matmul(att_score, seqout).squeeze(-2)
-    cls = self.dropout(pool)
-    logits = self.classifier(cls).float().squeeze(-1)
+    hidden_states = encoder_layers[-1]
+    logits = self.classifier(self.dropout(self.pooler(hidden_states)))
+    logits = logits.float().squeeze(-1)
     logits = logits.view([-1, num_opts])
     loss = 0
     if labels is not None:
@@ -60,3 +59,14 @@ class MultiChoiceModel(NNModule):
 
     return (logits, loss)
 
+  def _pre_load_hook(self, state_dict, prefix, local_metadata, strict,
+      missing_keys, unexpected_keys, error_msgs):
+    new_state = dict()
+    bert_prefix = prefix + 'bert.'
+    deberta_prefix = prefix + 'deberta.'
+    for k in list(state_dict.keys()):
+      if k.startswith(bert_prefix):
+        nk = deberta_prefix + k[len(bert_prefix):]
+        value = state_dict[k]
+        del state_dict[k]
+        state_dict[nk] = value
