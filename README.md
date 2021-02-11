@@ -34,13 +34,13 @@ Our pre-trained models are packaged into zipped files. You can download them fro
 
 |Model        | Parameters| Hidden Size | Layers| Note|
 |-------------|------|-----|-----|---------|
-|**[XXLarge-V2](https://huggingface.co/microsoft/deberta-xxlarge-v2)<sup>1</sup>**|1.5B|1536| 48|128K new SPM vocab |
-|[XLarge-V2](https://huggingface.co/microsoft/deberta-xlarge-v2)|900M|1536| 24| 128K new SPM vocab|
+|**[V2-XXLarge](https://huggingface.co/microsoft/deberta-v2-xxlarge)<sup>1</sup>**|1.5B|1536| 48|128K new SPM vocab |
+|[V2-XLarge](https://huggingface.co/microsoft/deberta-v2-xlarge)|900M|1536| 24| 128K new SPM vocab|
 |[XLarge](https://huggingface.co/microsoft/deberta-xlarge)|750M|1024|48| Same vocab as RoBERTa|
 |[Large](https://huggingface.co/microsoft/deberta-large)|400M|1024|24|Same vocab as RoBERTa|
 |[Base](https://huggingface.co/microsoft/deberta-base)|140M|768|12|Same vocab as RoBERTa|
-|[XXLarge-V2-MNLI](https://huggingface.co/microsoft/deberta-xxlarge-v2-mnli)|1.5B|1536| 48|Fine-turned with MNLI |
-|[XLarge-V2-MNLI](https://huggingface.co/microsoft/deberta-xlarge-v2-mnli)|900M|1536| 24|Fine-turned with MNLI |
+|[V2-XXLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xxlarge-mnli)|1.5B|1536| 48|Fine-turned with MNLI |
+|[V2-XLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xlarge-mnli)|900M|1536| 24|Fine-turned with MNLI |
 |[XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli)|750M|1024|48|Fine-turned with MNLI|
 |[Large-MNLI](https://huggingface.co/microsoft/deberta-large-mnli)|400M|1024|24|Fine-turned with MNLI|
 |[Base-MNLI](https://huggingface.co/microsoft/deberta-base-mnli)|140M|768|12|Fine-turned with MNLI|
@@ -203,11 +203,11 @@ We present the dev results on SQuAD 1.1/2.0 and several GLUE benchmark tasks.
 | XLNet-Large               | 95.1/89.7 | 90.6/87.9 | 90.8/-      | 97.0  | 94.9 | 69.0 | 85.9   | 90.8/-       | 92.3/- |92.5/- |
 | [DeBERTa-Large](https://huggingface.co/microsoft/deberta-large)<sup>1</sup> | 95.5/90.1 | 90.7/88.0 | 91.3/91.1| 96.5|95.3| 69.5| 91.0| 92.6/94.6| 92.3/- |92.8/92.5 |
 | [DeBERTa-XLarge](https://huggingface.co/microsoft/deberta-xlarge)<sup>1</sup> | -/-  | -/-  | 91.5/91.2| 97.0 | - | -    | 93.1   | 92.1/94.3    | -    |92.9/92.7|
-| [DeBERTa-XLarge-V2](https://huggingface.co/microsoft/deberta-xlarge-v2)<sup>1</sup>|95.8/90.8| 91.4/88.9|91.7/91.6| **97.5**| 95.8|71.1|**93.9**|92.0/94.2|92.3/89.8|92.9/92.9|
-|**[DeBERTa-XXLarge-V2](https://huggingface.co/microsoft/deberta-xxlarge-v2)<sup>1</sup>**|**96.1/91.4**|**92.2/89.7**|**91.7/91.9**|97.2|**96.0**|**72.0**| 93.5| **93.1/94.9**|**92.7/90.3** |**93.2/93.1** |
+| [DeBERTa-V2-XLarge](https://huggingface.co/microsoft/deberta-v2-xlarge)<sup>1</sup>|95.8/90.8| 91.4/88.9|91.7/91.6| **97.5**| 95.8|71.1|**93.9**|92.0/94.2|92.3/89.8|92.9/92.9|
+|**[DeBERTa-V2-XXLarge](https://huggingface.co/microsoft/deberta-v2-xxlarge)<sup>1,2</sup>**|**96.1/91.4**|**92.2/89.7**|**91.7/91.9**|97.2|**96.0**|**72.0**| 93.5| **93.1/94.9**|**92.7/90.3** |**93.2/93.1** |
 --------
-##### Notes.
- - <sup>1</sup> Following RoBERTa, for RTE, MRPC, STS-B, we fine-tune the tasks based on [DeBERTa-Large-MNLI](https://huggingface.co/microsoft/deberta-large-mnli), [DeBERTa-XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli), [DeBERTa-XLarge-V2-MNLI](https://huggingface.co/microsoft/deberta-xlarge-v2-mnli), [DeBERTa-XXLarge-V2-MNLI](https://huggingface.co/microsoft/deberta-xxlarge-v2-mnli). The results of SST-2/QQP/QNLI/SQuADv2 will also be slightly improved when start from MNLI fine-tuned models, however, we only report the numbers fine-tuned from pretrained base models for those 4 tasks.
+#### Notes.
+ - <sup>1</sup> Following RoBERTa, for RTE, MRPC, STS-B, we fine-tune the tasks based on [DeBERTa-Large-MNLI](https://huggingface.co/microsoft/deberta-large-mnli), [DeBERTa-XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli), [DeBERTa-V2-XLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xlarge-mnli), [DeBERTa-V2-XXLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xxlarge-mnli). The results of SST-2/QQP/QNLI/SQuADv2 will also be slightly improved when start from MNLI fine-tuned models, however, we only report the numbers fine-tuned from pretrained base models for those 4 tasks.
  
  
 ## Contacts
