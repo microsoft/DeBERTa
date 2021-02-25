@@ -131,13 +131,15 @@ class DeBERTa(torch.nn.Module):
     if state is None:
       state, config = load_model_state(self.pre_trained)
       self.config = config
+    
+    prefix = ''
+    for k in state:
+      if 'embeddings.' in k:
+        if not k.startswith('embeddings.'):
+          prefix = k[:k.index('embeddings.')]
+        break
 
-    def key_match(key, s):
-      c = [k for k in s if key in k]
-      assert len(c)==1, c
-      return c[0]
-    current = self.state_dict()
-    for c in current.keys():
-      current[c] = state[key_match(c, state.keys())]
-    self.load_state_dict(current)
-  
+    missing_keys = []
+    unexpected_keys = []
+    error_msgs = []
+    self._load_from_state_dict(state, prefix = prefix, local_metadata=None, strict=True, missing_keys=missing_keys, unexpected_keys=unexpected_keys, error_msgs=error_msgs)

@@ -24,6 +24,7 @@ import json
 from torch.utils.data import DataLoader
 from ..utils import *
 from ..utils import xtqdm as tqdm
+from ..sift import AdversarialLearner,hook_sift_layer
 from .tasks import load_tasks,get_task
 
 import pdb
@@ -63,8 +64,28 @@ def train_model(args, model, device, train_data, eval_data):
     output = model(**data)
     loss = output['loss']
     return loss.mean(), data['input_ids'].size(0)
+  
+  adv_modules = hook_sift_layer(model, hidden_size=model.config.hidden_size, learning_rate=args.vat_learning_rate, init_perturbation=args.vat_init_perturbation)
+  adv = AdversarialLearner(model, adv_modules)
+  def adv_loss_fn(trainer, model, data):
+    logits, loss = model(**data)
+    if isinstance(logits, Sequence):
+      logits = logits[-1]
+    v_teacher = []
 
-  trainer = DistributedTrainer(args, args.output_dir, model, device, data_fn, loss_fn = loss_fn, eval_fn = eval_fn, dump_interval = args.dump_interval)
+    t_logits = None
+    if args.vat_lambda>0:
+      def pert_logits_fn(model, **data):
+        logits,_ = model(**data)
+        if isinstance(logits, Sequence):
+          logits = logits[-1]
+        return logits
+
+      loss += adv.loss(logits, pert_logits_fn, loss_fn = args.vat_loss_fn, **data)*args.vat_lambda
+
+    return loss.mean(), data['input_ids'].size(0)
+
+  trainer = DistributedTrainer(args, args.output_dir, model, device, data_fn, loss_fn = adv_loss_fn, eval_fn = eval_fn, dump_interval = args.dump_interval)
   trainer.train()
 
 def merge_distributed(data_list, max_len=None):
@@ -387,6 +408,28 @@ def build_argument_parser():
             default=None,
             type=str,
             help="The path of the vocabulary")
+
+  parser.add_argument('--vat_lambda',
+            default=0,
+            type=float,
+            help="The weight of adversarial training loss.")
+
+  parser.add_argument('--vat_learning_rate',
+            default=1e-4,
+            type=float,
+            help="The learning rate used to update pertubation")
+
+  parser.add_argument('--vat_init_perturbation',
+            default=1e-2,
+            type=float,
+            help="The initialization for pertubation")
+
+  parser.add_argument('--vat_loss_fn',
+            default="symmetric-kl",
+            type=str,
+            help="The loss function used to calculate adversarial loss. It can be one of symmetric-kl, kl or mse.")
+
+
   return parser
 
 if __name__ == "__main__":
