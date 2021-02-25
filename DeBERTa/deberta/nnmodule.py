@@ -107,7 +107,7 @@ class NNModule(nn.Module):
           'num_attention_heads',
           'num_hidden_layers',
           'vocab_size',
-          'max_position_embeddings']:
+          'max_position_embeddings'] or (k not in  model_config.__dict__) or (model_config.__dict__[k] < 0):
           model_config.__dict__[k] = config.__dict__[k]
     if model_config is not None:
       config = copy.copy(model_config)

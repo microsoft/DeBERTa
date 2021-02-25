@@ -21,9 +21,13 @@ init=$1
 tag=$init
 case ${init,,} in
 	base)
-	parameters=" --num_train_epochs 3 \
+	parameters=" --num_train_epochs 6 \
+	--vat_lambda 5 \
+	--vat_learning_rate 1e-4 \
+	--vat_init_perturbation 1e-2 \
+	--fp16 True \
 	--warmup 1000 \
-	--learning_rate 2e-5 \
+	--learning_rate 1.5e-5 \
 	--train_batch_size 64 \
 	--cls_drop_out 0.1 "
 		;;
@@ -78,4 +82,4 @@ python -m DeBERTa.apps.run --model_config config.json  \
 	--task_name $Task \
 	--data_dir $cache_dir/glue_tasks/$Task \
 	--init_model $init \
-	--output_dir /tmp/ttonly/$tag/$task  $parameters
+	--output_dir /tmp/ttonly/$tag/${task}_v2  $parameters
