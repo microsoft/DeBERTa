@@ -45,9 +45,9 @@ class MultiChoiceModel(NNModule):
       position_ids = position_ids.view([-1, position_ids.size(-1)])
     if input_mask is not None:
       input_mask = input_mask.view([-1, input_mask.size(-1)])
-    encoder_layers = self.deberta(input_ids, token_type_ids=type_ids, attention_mask=input_mask,
+    outputs = self.deberta(input_ids, token_type_ids=type_ids, attention_mask=input_mask,
         position_ids=position_ids, output_all_encoded_layers=True)
-    hidden_states = encoder_layers[-1]
+    hidden_states = outputs['hidden_states'][-1]
     logits = self.classifier(self.dropout(self.pooler(hidden_states)))
     logits = logits.float().squeeze(-1)
     logits = logits.view([-1, num_opts])
@@ -57,7 +57,10 @@ class MultiChoiceModel(NNModule):
       loss_fn = CrossEntropyLoss()
       loss = loss_fn(logits, labels)
 
-    return (logits, loss)
+    return {
+            'logits' : logits,
+            'loss' : loss
+          }
 
   def _pre_load_hook(self, state_dict, prefix, local_metadata, strict,
       missing_keys, unexpected_keys, error_msgs):

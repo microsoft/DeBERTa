@@ -32,8 +32,9 @@ class ReCoRDQAModel(NNModule):
     self.deberta.apply_state()
 
   def forward(self, input_ids, entity_indice, type_ids=None, input_mask=None, labels=None, position_ids=None, placeholder=None, **kwargs):
-    encoder_layers = self.deberta(input_ids, attention_mask=input_mask, token_type_ids=type_ids,\
+    outputs = self.deberta(input_ids, attention_mask=input_mask, token_type_ids=type_ids,\
         position_ids=position_ids, output_all_encoded_layers=True)
+    encoder_layers = outputs['hidden_states']
     # bxexsp
     entity_mask = entity_indice>0
     tokens = encoder_layers[-1]
@@ -66,4 +67,6 @@ class ReCoRDQAModel(NNModule):
       loss_fn = BCEWithLogitsLoss()
       loss = loss_fn(sp_logits, labels.to(sp_logits))
 
-    return (logits, loss)
+    return {
+        'logits': logits,
+        'loss': loss }

@@ -21,7 +21,7 @@ from .ops import *
 from .disentangled_attention import *
 from .da_utils import *
 
-__all__ = ['BertEncoder', 'BertEmbeddings', 'ACT2FN', 'LayerNorm']
+__all__ = ['BertEncoder', 'BertEmbeddings', 'ACT2FN', 'LayerNorm', 'BertLMPredictionHead']
 
 class BertSelfOutput(nn.Module):
   def __init__(self, config):
@@ -184,7 +184,7 @@ class BertEncoder(nn.Module):
     relative_pos = self.get_rel_pos(hidden_states, query_states, relative_pos)
 
     all_encoder_layers = []
-    att_matrixs = []
+    att_matrices = []
     if isinstance(hidden_states, Sequence):
       next_kv = hidden_states[0]
     else:
@@ -209,15 +209,15 @@ class BertEncoder(nn.Module):
       if output_all_encoded_layers:
         all_encoder_layers.append(output_states)
         if return_att:
-          att_matrixs.append(att_m)
+          att_matrices.append(att_m)
     if not output_all_encoded_layers:
       all_encoder_layers.append(output_states)
       if return_att:
-        att_matrixs.append(att_m)
-    if return_att:
-      return (all_encoder_layers, att_matrixs)
-    else:
-      return all_encoder_layers
+        att_matrices.append(att_m)
+    return {
+        'hidden_states': all_encoder_layers,
+        'attention_matrices': att_matrices
+        }
 
 class BertEmbeddings(nn.Module):
   """Construct the embeddings from word, position and token_type embeddings.
@@ -229,10 +229,7 @@ class BertEmbeddings(nn.Module):
     self.word_embeddings = nn.Embedding(config.vocab_size, self.embedding_size, padding_idx = padding_idx)
 
     self.position_biased_input = getattr(config, 'position_biased_input', True)
-    if not self.position_biased_input:
-      self.position_embeddings = None
-    else:
-      self.position_embeddings = nn.Embedding(config.max_position_embeddings, self.embedding_size)
+    self.position_embeddings = nn.Embedding(config.max_position_embeddings, self.embedding_size)
 
     if config.type_vocab_size>0:
       self.token_type_embeddings = nn.Embedding(config.type_vocab_size, self.embedding_size)
@@ -253,14 +250,9 @@ class BertEmbeddings(nn.Module):
       token_type_ids = torch.zeros_like(input_ids)
 
     words_embeddings = self.word_embeddings(input_ids)
-    if self.position_embeddings is not None:
-      position_embeddings = self.position_embeddings(position_ids.long())
-    else:
-      position_embeddings = torch.zeros_like(words_embeddings)
+    position_embeddings = self.position_embeddings(position_ids.long())
 
     embeddings = words_embeddings
-    if self.position_biased_input:
-      embeddings += position_embeddings
     if self.config.type_vocab_size>0:
       token_type_embeddings = self.token_type_embeddings(token_type_ids)
       embeddings += token_type_embeddings
@@ -270,4 +262,28 @@ class BertEmbeddings(nn.Module):
 
     embeddings = MaskedLayerNorm(self.LayerNorm, embeddings, mask)
     embeddings = self.dropout(embeddings)
-    return embeddings
+    return {
+        'embeddings': embeddings,
+        'position_embeddings': position_embeddings}
+
+class BertLMPredictionHead(nn.Module):
+    def __init__(self, config, vocab_size):
+        super().__init__()
+        self.embedding_size = getattr(config, 'embedding_size', config.hidden_size)
+        self.dense = nn.Linear(config.hidden_size, self.embedding_size)
+        self.transform_act_fn = ACT2FN[config.hidden_act] \
+            if isinstance(config.hidden_act, str) else config.hidden_act
+
+        self.LayerNorm = LayerNorm(self.embedding_size, config.layer_norm_eps, elementwise_affine=True)
+
+        self.bias = nn.Parameter(torch.zeros(vocab_size))
+
+    def forward(self, hidden_states, embeding_weight):
+        hidden_states = self.dense(hidden_states)
+        hidden_states = self.transform_act_fn(hidden_states)
+        # b x s x d
+        hidden_states = MaskedLayerNorm(self.LayerNorm, hidden_states)
+
+        # b x s x v
+        logits = torch.matmul(hidden_states, embeding_weight.t().to(hidden_states)) + self.bias
+        return logits
