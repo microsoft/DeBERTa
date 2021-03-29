@@ -26,6 +26,8 @@ from ..utils import *
 from ..utils import xtqdm as tqdm
 from .tasks import load_tasks,get_task
 
+import pdb
+
 import LASER
 from LASER.training import DistributedTrainer, initialize_distributed, batch_to, set_random_seed,kill_children
 from LASER.data import DistributedBatchSampler, SequentialSampler, BatchSampler, AsyncDataLoader
@@ -58,7 +60,8 @@ def train_model(args, model, device, train_data, eval_data):
     return eval_metric
 
   def loss_fn(trainer, model, data):
-    _, loss = model(**data)
+    output = model(**data)
+    loss = output['loss']
     return loss.mean(), data['input_ids'].size(0)
 
   trainer = DistributedTrainer(args, args.output_dir, model, device, data_fn, loss_fn = loss_fn, eval_fn = eval_fn, dump_interval = args.dump_interval)
@@ -67,9 +70,12 @@ def train_model(args, model, device, train_data, eval_data):
 def merge_distributed(data_list, max_len=None):
   merged = []
   def gather(data):
-    data_chunks = [torch.zeros_like(data) for _ in range(args.world_size)]
-    torch.distributed.all_gather(data_chunks, data)
-    torch.cuda.synchronize()
+    data_size = [torch.zeros(data.dim(), dtype=torch.int).to(data.device) for _ in range(args.world_size)]
+    torch.distributed.all_gather(data_size, torch.tensor(data.size()).to(data_size[0]))
+    data_chunks = [torch.zeros(tuple(s.cpu().numpy())).to(data) for s in data_size]
+    data_chunks[data.device.index] = data
+    for i,_chunk in enumerate(data_chunks):
+      torch.distributed.broadcast(_chunk, src=i)
     return data_chunks
 
   for data in data_list:
@@ -82,12 +88,12 @@ def merge_distributed(data_list, max_len=None):
           data_chunks.append(data_)
         merged.append(data_chunks)
       else:
-        data_chunks = gather(data)
-        merged.extend(data_chunks)
+        _chunks = gather(data)
+        merged.extend(_chunks)
     else:
       merged.append(data)
   if not isinstance(merged[0], Sequence):
-    merged = torch.cat(merged)
+    merged = torch.cat([m.cpu() for m in merged])
     if max_len is not None:
       return merged[:max_len]
     else:
@@ -95,7 +101,7 @@ def merge_distributed(data_list, max_len=None):
   else:
     data_list=[]
     for d in zip(*merged):
-      data = torch.cat(d)
+      data = torch.cat([x.cpu() for x in d])
       if max_len is not None:
         data = data[:max_len]
       data_list.append(data)
@@ -163,8 +169,13 @@ def run_eval(args, model, device, eval_data, prefix=None, tag=None, steps=None):
     for batch in tqdm(AsyncDataLoader(eval_dataloader), ncols=80, desc='Evaluating: {}'.format(prefix), disable=no_tqdm):
       batch = batch_to(batch, device)
       with torch.no_grad():
-        logits, tmp_eval_loss = model(**batch)
-      label_ids = batch['labels'].to(device)
+        output = model(**batch)
+      logits = output['logits'].detach()
+      tmp_eval_loss = output['loss'].detach()
+      if 'labels' in output:
+        label_ids = output['labels'].detach().to(device)
+      else:
+        label_ids = batch['labels'].to(device)
       predicts.append(logits)
       labels.append(label_ids)
       eval_loss += tmp_eval_loss.mean().item()
@@ -198,8 +209,9 @@ def run_predict(args, model, device, eval_data, prefix=None):
     for batch in tqdm(AsyncDataLoader(eval_dataloader), ncols=80, desc='Evaluating: {}'.format(prefix), disable=args.rank>0):
       batch = batch_to(batch, device)
       with torch.no_grad():
-        logits, _ = model(**batch)
-        predicts.append(logits)
+        output = model(**batch)
+      logits = output['logits']
+      predicts.append(logits)
     predicts = merge_distributed(predicts, len(eval_item.data))
     if args.rank<=0:
       predict_fn = eval_item.predict_fn
@@ -238,7 +250,7 @@ def main(args):
     logger.info("  Prediction batch size = %d", args.predict_batch_size)
 
   if args.do_train:
-    train_data = task.train_data(max_seq_len=args.max_seq_length, mask_gen = None, debug=args.debug)
+    train_data = task.train_data(max_seq_len=args.max_seq_length, debug=args.debug)
   model_class_fn = task.get_model_class_fn()
   model = create_model(args, len(label_list), model_class_fn)
   if args.do_train:

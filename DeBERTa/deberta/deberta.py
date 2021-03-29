@@ -110,19 +110,13 @@ class DeBERTa(torch.nn.Module):
     if token_type_ids is None:
       token_type_ids = torch.zeros_like(input_ids)
 
-    embedding_output = self.embeddings(input_ids.to(torch.long), token_type_ids.to(torch.long), position_ids, attention_mask)
-    encoded_layers = self.encoder(embedding_output,
+    ebd_output = self.embeddings(input_ids.to(torch.long), token_type_ids.to(torch.long), position_ids, attention_mask)
+    embedding_output = ebd_output['embeddings']
+    encoder_output = self.encoder(embedding_output,
                    attention_mask,
                    output_all_encoded_layers=output_all_encoded_layers, return_att = return_att)
-    if return_att:
-      encoded_layers, att_matrixs = encoded_layers
-
-    if not output_all_encoded_layers:
-      encoded_layers = encoded_layers[-1:]
-
-    if return_att:
-      return encoded_layers, att_matrixs
-    return encoded_layers
+    encoder_output.update(ebd_output)
+    return encoder_output
 
   def apply_state(self, state = None):
     """ Load state from previous loaded model state dictionary.

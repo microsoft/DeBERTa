@@ -41,8 +41,9 @@ class SequenceClassificationModel(NNModule):
     self.deberta.apply_state()
 
   def forward(self, input_ids, type_ids=None, input_mask=None, labels=None, position_ids=None, **kwargs):
-    encoder_layers = self.deberta(input_ids, attention_mask=input_mask, token_type_ids=type_ids,
+    outputs = self.deberta(input_ids, attention_mask=input_mask, token_type_ids=type_ids,
         position_ids=position_ids, output_all_encoded_layers=True)
+    encoder_layers = outputs['hidden_states']
     pooled_output = self.pooler(encoder_layers[-1])
     pooled_output = self.dropout(pooled_output)
     logits = self.classifier(pooled_output)
@@ -69,6 +70,10 @@ class SequenceClassificationModel(NNModule):
         label_confidence = 1
         loss = -((log_softmax(logits)*labels).sum(-1)*label_confidence).mean()
 
+    return {
+            'logits' : logits,
+            'loss' : loss
+          }
     return (logits,loss)
 
   def _pre_load_hook(self, state_dict, prefix, local_metadata, strict,

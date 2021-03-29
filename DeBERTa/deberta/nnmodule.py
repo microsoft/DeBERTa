@@ -92,8 +92,9 @@ class NNModule(nn.Module):
       config = None
     model_config = None
     model_state = None
-    if model_path and model_path.strip() == '-' or model_path.strip()=='':
+    if (model_path is not None) and (model_path.strip() == '-' or model_path.strip()==''):
       model_path = None
+
     try:
       model_state, model_config = load_model_state(model_path, tag=tag, no_cache=no_cache, cache_dir=cache_dir)
     except Exception as exp:
