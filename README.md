@@ -3,6 +3,10 @@
 This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**e**nhanced **BERT** with Disentangled **A**ttention ](https://arxiv.org/abs/2006.03654)
 
 ## News
+### 3/31/2021
+- Masked language model task is added
+- SuperGLUE tasks is added
+
 ### 2/03/2021
 DeBERTa v2 code and the **900M, 1.5B** [model](https://huggingface.co/models?search=microsoft%2Fdeberta) are here now. This includes the 1.5B model used for our SuperGLUE single-model submission and achieving 89.9, versus human baseline 89.8. You can find more details about this submission in our [blog](https://www.microsoft.com/en-us/research/blog/microsoft-deberta-surpasses-human-performance-on-the-superglue-benchmark/)
 
