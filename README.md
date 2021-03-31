@@ -24,9 +24,9 @@ With DeBERTa 1.5B model, we surpass T5 11B model and human performance on SuperG
 We released the pre-trained models, source code, and fine-tuning scripts to reproduce some of the experimental results in the paper. You can follow similar scripts to apply DeBERTa to your own experiments or applications. Pre-training scripts will be released in the next step. 
 
 ## TODOs
-- [ ] Add SuperGLUE tasks
+- [x] Add SuperGLUE tasks
 - [ ] Add SiFT code
-- [ ] Add Pretraining code
+- [x] Add Pretraining code
 
 
 ## Introduction to DeBERTa 
