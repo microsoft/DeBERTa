@@ -11,6 +11,7 @@
 
 import os
 os.environ["OMP_NUM_THREADS"] = "1"
+from ..deberta import tokenizers,load_vocab
 from collections import OrderedDict, Mapping, Sequence
 import argparse
 import random
@@ -21,7 +22,6 @@ import math
 import torch
 import json
 from torch.utils.data import DataLoader
-from ..deberta import tokenizers,load_vocab
 from ..utils import *
 from ..utils import xtqdm as tqdm
 from .tasks import load_tasks,get_task

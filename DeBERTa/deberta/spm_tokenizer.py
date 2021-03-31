@@ -8,10 +8,10 @@
 #
 
 
+import sentencepiece as sp
 import six
 import unicodedata
 import os
-import sentencepiece as sp
 import regex as re
 from .cache_utils import load_vocab
 from ..utils import get_logger

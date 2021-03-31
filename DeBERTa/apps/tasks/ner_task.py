@@ -10,7 +10,6 @@ import ujson as json
 from ...utils import xtqdm as tqdm
 from ...utils import get_logger
 
-from ...deberta import GPT2Tokenizer
 from ..models import NERModel
 from ...data import ExampleInstance, ExampleSet, DynamicDataset
 from ...data.example import *

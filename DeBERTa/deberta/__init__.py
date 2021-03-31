@@ -10,6 +10,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from .tokenizers import *
 from .pooling import *
 from .mlm import MLMPredictionHead
 from .nnmodule import NNModule
@@ -17,8 +18,5 @@ from .deberta import *
 from .disentangled_attention import *
 from .ops import *
 from .bert import *
-from .gpt2_tokenizer import GPT2Tokenizer
-from .spm_tokenizer import *
-from .tokenizers import *
 from .config import *
 from .cache_utils import *
