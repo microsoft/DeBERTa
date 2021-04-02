@@ -68,7 +68,9 @@ def train_model(args, model, device, train_data, eval_data):
   adv_modules = hook_sift_layer(model, hidden_size=model.config.hidden_size, learning_rate=args.vat_learning_rate, init_perturbation=args.vat_init_perturbation)
   adv = AdversarialLearner(model, adv_modules)
   def adv_loss_fn(trainer, model, data):
-    logits, loss = model(**data)
+    output = model(**data)
+    logits = output['logits']
+    loss = output['loss']
     if isinstance(logits, Sequence):
       logits = logits[-1]
     v_teacher = []

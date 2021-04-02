@@ -55,7 +55,7 @@ class PerturbationLayer(torch.nn.Module):
     return True
 
 def hook_sift_layer(model, hidden_size, learning_rate=1e-4, init_perturbation=1e-2, target_module = 'embeddings.LayerNorm'):
-"""
+  """
   Hook the sift perturbation layer to and existing model. With this method, you can apply adversarial training
   without changing the existing model implementation.
 
@@ -70,7 +70,8 @@ def hook_sift_layer(model, hidden_size, learning_rate=1e-4, init_perturbation=1e
   Outputs:
     The perturbation layers.
 
-"""
+  """
+  
   if isinstance(target_module, str):
     _modules = [k for n,k in model.named_modules() if  target_module in n]
   else:
@@ -122,7 +123,7 @@ class AdversarialLearner:
     self.model = model
 
   def loss(self, target, logits_fn, loss_fn = 'symmetric-kl', *wargs, **kwargs):
-  """
+    """
     Calculate the adversarial loss based on the given logits fucntion and loss function.
     Inputs:
     `target`: the logits from original inputs.
@@ -142,9 +143,9 @@ class AdversarialLearner:
       ```
     `*wargs`: the positional arguments that will be passed to the model
     `**kwargs`: the key-word arguments that will be passed to the model
-  Outputs:
-    The loss based on pertubated inputs.
-  """
+    Outputs:
+      The loss based on pertubated inputs.
+    """
     self.prepare()
     if isinstance(loss_fn, str):
       loss_fn = perturbation_loss_fns[loss_fn]
