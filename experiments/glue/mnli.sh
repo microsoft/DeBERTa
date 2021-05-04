@@ -21,6 +21,15 @@ init=$1
 tag=$init
 case ${init,,} in
 	base)
+	parameters=" --num_train_epochs 3 \
+	--fp16 True \
+	--warmup 1000 \
+	--learning_rate 2e-5 \
+	--train_batch_size 64 \
+	--cls_drop_out 0.1 "
+		;;
+	base-sift)
+  init=base
 	parameters=" --num_train_epochs 6 \
 	--vat_lambda 5 \
 	--vat_learning_rate 1e-4 \
@@ -58,6 +67,18 @@ case ${init,,} in
 	xxlarge-v2)
 	parameters=" --num_train_epochs 3 \
 	--warmup 1000 \
+	--learning_rate 3e-6 \
+	--train_batch_size 64 \
+	--cls_drop_out 0.3 \
+	--fp16 True "
+		;;
+	xxlarge-v2-sift)
+	init=xxlarge-v2
+	parameters=" --num_train_epochs 6 \
+	--warmup 1000 \
+	--vat_lambda 5 \
+	--vat_learning_rate 1e-4 \
+	--vat_init_perturbation 1e-2 \
 	--learning_rate 3e-6 \
 	--train_batch_size 64 \
 	--cls_drop_out 0.3 \
