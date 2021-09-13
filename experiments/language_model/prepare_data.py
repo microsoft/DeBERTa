@@ -5,10 +5,10 @@ import argparse
 from tqdm import tqdm
 
 def tokenize_data(input, output=None):
-  p,t=deberta.load_vocab(vocab_path=None, vocab_type='gpm', pretrained_id='xlarge-v2')
+  p,t=deberta.load_vocab(vocab_path=None, vocab_type='spm', pretrained_id='xlarge-v2')
   tokenizer=deberta.tokenizers[t](p)
   if output is None:
-    output=input + '.gpm'
+    output=input + '.spm'
   all_tokens = []
   with open(input, encoding = 'utf-8') as fs:
     for l in tqdm(fs, ncols=80, desc='Loading'):

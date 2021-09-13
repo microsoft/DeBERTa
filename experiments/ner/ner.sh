@@ -62,6 +62,14 @@ case ${init,,} in
 	--cls_drop_out 0 \
 	--fp16 True "
 		;;
+	deberta-v3-large)
+	parameters=" --num_train_epochs 10 \
+	--warmup 10 \
+	--learning_rate 9e-6 \
+	--fp16 True \
+	--train_batch_size 16 \
+	--cls_drop_out 0 "
+		;;
 	*)
 		echo "usage $0 <Pretrained model configuration>"
 		echo "Supported configurations"
@@ -79,7 +87,7 @@ python -m DeBERTa.apps.run --model_config config.json  \
 	--do_train \
 	--max_seq_len 512 \
 	--task_name $Task \
-	--data_dir $cache_dir/glue_tasks/$Task \
+	--data_dir $data_dir \
 	--init_model $init \
 	--output_dir /tmp/ttonly/$tag/$task  $parameters
 

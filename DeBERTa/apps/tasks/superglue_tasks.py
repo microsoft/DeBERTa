@@ -733,7 +733,7 @@ dataset_size = dataset_size, shuffle=True, **kwargs)
     # Max Enities spans 87 # 90
     max_entities = 110
     #max_entity_span = 110
-    max_entity_span = 90
+    max_entity_span = 180
     entities = example.entity_spans
     assert len(entities)<=max_entities, f'Entities number {len(entities)} exceeds the maxium allowed entities {max_entities}'
     entity_indice = []

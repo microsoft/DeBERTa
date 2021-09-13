@@ -60,6 +60,14 @@ case ${init,,} in
 	--cls_drop_out 0.15 \
 	--fp16 True "
 		;;
+	deberta-v3-large)
+	parameters=" --num_train_epochs 3 \
+	--fp16 True \
+	--warmup 500 \
+	--learning_rate 7e-6 \
+	--train_batch_size 64 \
+	--cls_drop_out 0.1 "
+		;;
 	*)
 		echo "usage $0 <Pretrained model configuration>"
 		echo "Supported configurations"

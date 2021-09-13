@@ -48,7 +48,7 @@ class NGramMaskGenerator:
     if max_preds_per_seq is None:
       self.max_preds_per_seq = math.ceil(max_seq_len*mask_lm_prob /10)*10
 
-    self.max_gram = max_gram
+    self.max_gram = max(max_gram, 1)
     self.mask_window = int(1/mask_lm_prob) # make ngrams per window sized context
     self.vocab_words = list(tokenizer.vocab.keys())
 
@@ -168,6 +168,20 @@ dataset_size = dataset_size, shuffle=True, **kwargs)
       preds = np.argmax(logits, axis=-1)
       acc = (preds==labels).sum()/len(labels)
       metrics =  OrderedDict(accuracy= acc)
+
+      logits = torch.tensor(logits).cuda()
+      labels = torch.tensor(labels).cuda().long()
+      chk = 1024
+      off = 0
+      loss_fn = torch.nn.CrossEntropyLoss(reduction="none")
+      losses = []
+      while off<labels.size(0):
+        loss = loss_fn(logits[off:off+chk, :],  labels[off:off+chk])
+        losses.append(loss)
+        off += chk
+      loss = torch.cat(losses).mean()
+      ppl = loss.exp().cpu().item()
+      metrics['PPL'] = ppl
       return metrics
     return metrics_fn
 

@@ -69,6 +69,16 @@ case ${init,,} in
 	--fp16 True \
 	--max_seq_len 512 "
 		;;
+	deberta-v3-large)
+	parameters=" --num_train_epochs 6 \
+	--fp16 True \
+	--warmup 200 \
+	--do_train \
+	--learning_rate 7e-6  \
+	--train_batch_size 64 \
+	--max_seq_len 512     \
+	--cls_drop_out 0.2 "
+		;;
 	*)
 		echo "usage $0 <Pretrained model configuration>"
 		echo "Supported configurations"

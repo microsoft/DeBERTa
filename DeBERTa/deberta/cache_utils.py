@@ -37,10 +37,14 @@ pretrained_models= {
     'base-mnli': PretrainedModel('deberta-base-mnli', 'bpe_encoder.bin', 'gpt2'),
     'large-mnli': PretrainedModel('deberta-large-mnli', 'bpe_encoder.bin', 'gpt2'),
     'xlarge-mnli': PretrainedModel('deberta-xlarge-mnli', 'bpe_encoder.bin', 'gpt2'),
-    'xlarge-v2': PretrainedModel('deberta-xlarge-v2', 'spm.model', 'spm'),
-    'xxlarge-v2': PretrainedModel('deberta-xxlarge-v2', 'spm.model', 'spm'),
-    'xlarge-v2-mnli': PretrainedModel('deberta-xlarge-v2-mnli', 'spm.model', 'spm'),
-    'xxlarge-v2-mnli': PretrainedModel('deberta-xxlarge-v2-mnli', 'spm.model', 'spm')
+    'xlarge-v2': PretrainedModel('deberta-v2-xlarge', 'spm.model', 'spm'),
+    'xxlarge-v2': PretrainedModel('deberta-v2-xxlarge', 'spm.model', 'spm'),
+    'xlarge-v2-mnli': PretrainedModel('deberta-v2-xlarge-mnli', 'spm.model', 'spm'),
+    'xxlarge-v2-mnli': PretrainedModel('deberta-v2-xxlarge-mnli', 'spm.model', 'spm'),
+    'deberta-v3-small': PretrainedModel('deberta-v3-small', 'spm.model', 'spm'),
+    'deberta-v3-base': PretrainedModel('deberta-v3-base', 'spm.model', 'spm'),
+    'deberta-v3-large': PretrainedModel('deberta-v3-large', 'spm.model', 'spm'),
+    'mdeberta-v3-base': PretrainedModel('mdeberta-v3-base', 'spm.model', 'spm'),
   }
 
 def download_asset(url, name, tag=None, no_cache=False, cache_dir=None):

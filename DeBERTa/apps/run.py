@@ -46,7 +46,7 @@ def create_model(args, num_labels, model_class_fn):
   logger.info(f'Total parameters: {sum([p.numel() for p in model.parameters()])}')
   return model
 
-def train_model(args, model, device, train_data, eval_data):
+def train_model(args, model, device, train_data, eval_data, run_eval_fn):
   total_examples = len(train_data)
   num_train_steps = int(len(train_data)*args.num_train_epochs / args.train_batch_size)
   logger.info("  Training batch size = %d", args.train_batch_size)
@@ -56,7 +56,7 @@ def train_model(args, model, device, train_data, eval_data):
     return train_data, num_train_steps, None
 
   def eval_fn(trainer, model, device, tag):
-    results = run_eval(trainer.args, model, device, eval_data, tag, steps=trainer.trainer_state.steps)
+    results = run_eval_fn(trainer.args, model, device, eval_data, tag, steps=trainer.trainer_state.steps)
     eval_metric = np.mean([v[0] for k,v in results.items() if 'train' not in k])
     return eval_metric
 
@@ -285,11 +285,15 @@ def main(args):
   if not isinstance(device, torch.device):
     return 0
   model.to(device)
+  run_eval_fn = task.run_eval_fn()
+  if run_eval_fn is None:
+    run_eval_fn = run_eval
+  
   if args.do_eval:
     run_eval(args, model, device, eval_data, prefix=args.tag)
 
   if args.do_train:
-    train_model(args, model, device, train_data, eval_data)
+    train_model(args, model, device, train_data, eval_data, run_eval_fn)
 
   if args.do_predict:
     run_predict(args, model, device, test_data, prefix=args.tag)

@@ -257,6 +257,9 @@ class BertEmbeddings(nn.Module):
       token_type_embeddings = self.token_type_embeddings(token_type_ids)
       embeddings += token_type_embeddings
 
+    if self.position_biased_input:
+      embeddings += position_embeddings
+
     if self.embedding_size != self.config.hidden_size:
       embeddings = self.embed_proj(embeddings)
 
