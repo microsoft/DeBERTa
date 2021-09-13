@@ -20,11 +20,59 @@ setup_glue_data $Task
 init=$1
 tag=$init
 case ${init,,} in
+	deberta-v3-small)
+	parameters=" --num_train_epochs 2 \
+	--fp16 False \
+	--warmup 1000 \
+	--learning_rate 4.5e-5 \
+	--train_batch_size 64 \
+	--cls_drop_out 0.20 "
+		;;
+	deberta-v3-small-sift)
+	init=deberta-v3-small
+	parameters=" --num_train_epochs 6 \
+	--vat_lambda 5 \
+	--vat_learning_rate 1e-4 \
+	--vat_init_perturbation 1e-2 \
+	--fp16 False \
+	--warmup 1000 \
+	--learning_rate 3.5e-5 \
+	--train_batch_size 64 \
+	--cls_drop_out 0.1 "
+		;;
+	deberta-v3-base)
+	parameters=" --num_train_epochs 3 \
+	--fp16 True \
+	--warmup 1000 \
+	--learning_rate 1.5e-5 \
+	--train_batch_size 64 \
+	--cls_drop_out 0.1 "
+		;;
+	deberta-v3-base-sift)
+	init=deberta-v3-base
+	parameters=" --num_train_epochs 6 \
+	--vat_lambda 5 \
+	--fp16 True \
+	--vat_learning_rate 1e-4 \
+	--vat_init_perturbation 1e-2 \
+	--warmup 1000 \
+	--learning_rate 1.5e-5 \
+	--train_batch_size 64 \
+	--cls_drop_out 0.1 "
+		;;
+	deberta-v3-large)
+	parameters=" --num_train_epochs 2 \
+	--fp16 True \
+	--warmup 500 \
+	--learning_rate 7e-6 \
+	--train_batch_size 64 \
+	--cls_drop_out 0.3 "
+		;;
 	base)
 	parameters=" --num_train_epochs 3 \
 	--fp16 True \
 	--warmup 1000 \
-	--learning_rate 2e-5 \
+	--learning_rate 3e-5 \
 	--train_batch_size 64 \
 	--cls_drop_out 0.1 "
 		;;
@@ -100,6 +148,7 @@ python -m DeBERTa.apps.run --model_config config.json  \
 	--tag $tag \
 	--do_train \
 	--max_seq_len 256 \
+	--eval_batch_size 256 \
 	--task_name $Task \
 	--data_dir $cache_dir/glue_tasks/$Task \
 	--init_model $init \

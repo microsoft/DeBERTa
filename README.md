@@ -3,6 +3,10 @@
 This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**e**nhanced **BERT** with Disentangled **A**ttention ](https://arxiv.org/abs/2006.03654)
 
 ## News
+### 11/16/2021
+- [DeBERTa V3 models](https://huggingface.co/models?other=deberta-v3) are publicly available now. The new models are trained with ELECTRA-style objective plus gradient-disentangled embedding sharing which further improves the model efficiency.
+- Scripts for DeBERTa V3 model fine-tuning are added
+
 ### 3/31/2021
 - Masked language model task is added
 - SuperGLUE tasks is added

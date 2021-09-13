@@ -22,7 +22,8 @@ __all__ = ['NERModel']
 class NERModel(NNModule):
   def __init__(self, config, num_labels = 2, drop_out=None, **kwargs):
     super().__init__(config)
-    self.bert = DeBERTa(config)
+    self._register_load_state_dict_pre_hook(self._pre_load_hook)
+    self.deberta = DeBERTa(config)
     self.num_labels = num_labels
     self.proj = nn.Linear(config.hidden_size, config.hidden_size)
     self.classifier = nn.Linear(config.hidden_size, self.num_labels)
@@ -31,7 +32,7 @@ class NERModel(NNModule):
     self.apply(self.init_weights)
 
   def forward(self, input_ids, type_ids=None, input_mask=None, labels=None, position_ids=None, **kwargs):
-    outputs = self.bert(input_ids, token_type_ids=type_ids, attention_mask=input_mask, \
+    outputs = self.deberta(input_ids, token_type_ids=type_ids, attention_mask=input_mask, \
         position_ids=position_ids, output_all_encoded_layers=True)
     encoder_layers = outputs['hidden_states']
     cls = encoder_layers[-1]
@@ -52,3 +53,15 @@ class NERModel(NNModule):
             'logits' : logits,
             'loss' : loss
           }
+
+  def _pre_load_hook(self, state_dict, prefix, local_metadata, strict,
+      missing_keys, unexpected_keys, error_msgs):
+    new_state = dict()
+    bert_prefix = prefix + 'bert.'
+    deberta_prefix = prefix + 'deberta.'
+    for k in list(state_dict.keys()):
+      if k.startswith(bert_prefix):
+        nk = deberta_prefix + k[len(bert_prefix):]
+        value = state_dict[k]
+        del state_dict[k]
+        state_dict[nk] = value

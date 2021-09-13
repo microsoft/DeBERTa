@@ -29,6 +29,15 @@ Task=MLM
 init=$1
 tag=$init
 case ${init,,} in
+	bert-base)
+	parameters=" --num_train_epochs 1 \
+	--model_config bert_base.json \
+	--warmup 10000 \
+	--learning_rate 1e-4 \
+	--train_batch_size 256 \
+	--max_ngram 1 \
+	--fp16 True "
+		;;
 	xlarge-v2)
 	parameters=" --num_train_epochs 1 \
 	--model_config xlarge.json \
@@ -60,8 +69,9 @@ data_dir=$cache_dir/wiki103/spm
 python -m DeBERTa.apps.run --model_config config.json  \
 	--tag $tag \
 	--do_train \
-	--num_training_steps 10000 \
+	--num_training_steps 1000000 \
 	--max_seq_len 512 \
+	--dump 10000 \
 	--task_name $Task \
 	--data_dir $data_dir \
 	--vocab_path $cache_dir/spm.model \

@@ -69,8 +69,8 @@ class DisentangledSelfAttention(nn.Module):
     def forward(self, hidden_states, attention_mask, return_att=False, query_states=None, relative_pos=None, rel_embeddings=None):
         if query_states is None:
             query_states = hidden_states
-        query_layer = self.transpose_for_scores(self.query_proj(query_states), self.num_attention_heads)
-        key_layer = self.transpose_for_scores(self.key_proj(hidden_states), self.num_attention_heads)
+        query_layer = self.transpose_for_scores(self.query_proj(query_states), self.num_attention_heads).float()
+        key_layer = self.transpose_for_scores(self.key_proj(hidden_states), self.num_attention_heads).float()
         value_layer = self.transpose_for_scores(self.value_proj(hidden_states), self.num_attention_heads)
 
         rel_att = None
@@ -83,14 +83,14 @@ class DisentangledSelfAttention(nn.Module):
         if 'p2p' in self.pos_att_type:
             scale_factor += 1
         scale = math.sqrt(query_layer.size(-1)*scale_factor)
-        attention_scores = torch.bmm(query_layer, key_layer.transpose(-1, -2))/scale
+        attention_scores = torch.bmm(query_layer, key_layer.transpose(-1, -2)/scale)
         if self.relative_attention:
             rel_embeddings = self.pos_dropout(rel_embeddings)
             rel_att = self.disentangled_attention_bias(query_layer, key_layer, relative_pos, rel_embeddings, scale_factor)
 
         if rel_att is not None:
             attention_scores = (attention_scores + rel_att)
-        attention_scores = attention_scores
+        attention_scores = (attention_scores - attention_scores.max(dim=-1, keepdim=True).values.detach()).to(hidden_states)
         attention_scores = attention_scores.view(-1, self.num_attention_heads, attention_scores.size(-2), attention_scores.size(-1))
 
         # bxhxlxd
@@ -140,10 +140,10 @@ class DisentangledSelfAttention(nn.Module):
         # content->position
         if 'c2p' in self.pos_att_type:
             scale = math.sqrt(pos_key_layer.size(-1)*scale_factor)
-            c2p_att = torch.bmm(query_layer, pos_key_layer.transpose(-1, -2))
+            c2p_att = torch.bmm(query_layer/scale, pos_key_layer.transpose(-1, -2).to(query_layer))
             c2p_pos = torch.clamp(relative_pos + att_span, 0, att_span*2-1)
             c2p_att = torch.gather(c2p_att, dim=-1, index=c2p_pos.squeeze(0).expand([query_layer.size(0), query_layer.size(1), relative_pos.size(-1)]))
-            score += c2p_att/scale
+            score += c2p_att
 
         # position->content
         if 'p2c' in self.pos_att_type or 'p2p' in self.pos_att_type:
@@ -159,11 +159,11 @@ class DisentangledSelfAttention(nn.Module):
                 pos_index = relative_pos[:, :, :, 0].unsqueeze(-1)
 
         if 'p2c' in self.pos_att_type:
-            p2c_att = torch.bmm(key_layer, pos_query_layer.transpose(-1, -2))
+            p2c_att = torch.bmm(key_layer/scale, pos_query_layer.transpose(-1, -2).to(key_layer))
             p2c_att = torch.gather(p2c_att, dim=-1, index=p2c_pos.squeeze(0).expand([query_layer.size(0), key_layer.size(-2), key_layer.size(-2)])).transpose(-1,-2)
             if query_layer.size(-2) != key_layer.size(-2):
                 p2c_att = torch.gather(p2c_att, dim=-2, index=pos_index.expand(p2c_att.size()[:2] + (pos_index.size(-2), key_layer.size(-2))))
-            score += p2c_att/scale
+            score += p2c_att
 
         # position->position
         if 'p2p' in self.pos_att_type:

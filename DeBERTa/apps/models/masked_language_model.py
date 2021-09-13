@@ -31,6 +31,7 @@ class EnhancedMaskDecoder(torch.nn.Module):
   def __init__(self, config, vocab_size):
     super().__init__()
     self.config = config
+    self.position_biased_input = getattr(config, 'position_biased_input', True)
     self.lm_head = BertLMPredictionHead(config, vocab_size)
 
   def forward(self, ctx_layers, ebd_weight, target_ids, input_ids, input_mask, z_states, attention_mask, encoder, relative_pos=None):
@@ -56,19 +57,21 @@ class EnhancedMaskDecoder(torch.nn.Module):
       attention_mask = attention_mask.unsqueeze(1)
     target_mask = target_ids>0
     hidden_states = encoder_layers[-2]
-    layers = [encoder.layer[-1] for _ in range(2)]
+    if not self.position_biased_input: 
+      layers = [encoder.layer[-1] for _ in range(2)]
+      z_states +=  hidden_states
+      query_states = z_states
+      query_mask = attention_mask
+      outputs = []
+      rel_embeddings = encoder.get_rel_embedding()
 
-    z_states +=  hidden_states
-    query_mask = attention_mask
-    query_states = z_states
-    outputs = []
-    rel_embeddings = encoder.get_rel_embedding()
-
-    for layer in layers:
-      # TODO: pass relative pos ids
-      output = layer(hidden_states, query_mask, return_att=False, query_states = query_states, relative_pos=relative_pos, rel_embeddings = rel_embeddings)
-      query_states = output
-      outputs.append(query_states)
+      for layer in layers:
+        # TODO: pass relative pos ids
+        output = layer(hidden_states, query_mask, return_att=False, query_states = query_states, relative_pos=relative_pos, rel_embeddings = rel_embeddings)
+        query_states = output
+        outputs.append(query_states)
+    else:
+      outputs = [encoder_layers[-1]]
     
     _mask_index = (target_ids>0).view(-1).nonzero().view(-1)
     def flatten_states(q_states):

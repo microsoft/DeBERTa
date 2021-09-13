@@ -64,6 +64,12 @@ class Task():
     label_dict = {l:i for i,l in enumerate(self.get_labels())}
     return label_dict[labelstr] if labelstr in label_dict else -1
 
+  def run_eval_fn(self):
+    return None
+
+  def run_pred_fn(self):
+    return None
+
   def get_metrics_fn(self):
     """Calcuate metrics based on prediction results"""
     def metrics_fn(logits, labels):
