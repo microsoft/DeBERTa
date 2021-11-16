@@ -48,6 +48,10 @@ Our pre-trained models are packaged into zipped files. You can download them fro
 |[XLarge](https://huggingface.co/microsoft/deberta-xlarge)|750M|1024|48| Same vocab as RoBERTa|
 |[Large](https://huggingface.co/microsoft/deberta-large)|400M|1024|24|Same vocab as RoBERTa|
 |[Base](https://huggingface.co/microsoft/deberta-base)|140M|768|12|Same vocab as RoBERTa|
+|[DeBERTa-V3-Large](https://huggingface.co/microsoft/deberta-v3-large)<sup>2</sup>|418M|1024| 24| 128K new SPM vocab|
+|[DeBERTa-V3-Base](https://huggingface.co/microsoft/deberta-v3-base)<sup>2</sup>|183M|768| 12| 128K new SPM vocab|
+|[DeBERTa-V3-Small](https://huggingface.co/microsoft/deberta-v3-small)<sup>2</sup>|143M|768| 6| 128K new SPM vocab|
+|[mDeBERTa-V3-Base](https://huggingface.co/microsoft/mdeberta)<sup>2</sup>|280M|768| 12| 250K new SPM vocab, multi-lingual model with 102 languages|
 |[V2-XXLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xxlarge-mnli)|1.5B|1536| 48|Fine-turned with MNLI |
 |[V2-XLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xlarge-mnli)|900M|1536| 24|Fine-turned with MNLI |
 |[XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli)|750M|1024|48|Fine-turned with MNLI|
@@ -56,6 +60,8 @@ Our pre-trained models are packaged into zipped files. You can download them fro
 
 ## Note 
 - 1 This is the model(89.9) that surpassed **T5 11B(89.3) and human performance(89.8)** on **SuperGLUE** for the first time. 128K new SPM vocab. 
+- 2 These V3 DeBERTa models are deberta models pre-trained with ELECTRA-style objective plus gradient-disentangled embedding sharing which significantly improves the model efficiency.
+
 
 # Try the model
 
@@ -214,6 +220,7 @@ We present the dev results on SQuAD 1.1/2.0 and several GLUE benchmark tasks.
 | [DeBERTa-XLarge](https://huggingface.co/microsoft/deberta-xlarge)<sup>1</sup> | -/-  | -/-  | 91.5/91.2| 97.0 | - | -    | 93.1   | 92.1/94.3    | -    |92.9/92.7|
 | [DeBERTa-V2-XLarge](https://huggingface.co/microsoft/deberta-v2-xlarge)<sup>1</sup>|95.8/90.8| 91.4/88.9|91.7/91.6| **97.5**| 95.8|71.1|**93.9**|92.0/94.2|92.3/89.8|92.9/92.9|
 |**[DeBERTa-V2-XXLarge](https://huggingface.co/microsoft/deberta-v2-xxlarge)<sup>1,2</sup>**|**96.1/91.4**|**92.2/89.7**|**91.7/91.9**|97.2|**96.0**|**72.0**| 93.5| **93.1/94.9**|**92.7/90.3** |**93.2/93.1** |
+
 --------
 #### Notes.
  - <sup>1</sup> Following RoBERTa, for RTE, MRPC, STS-B, we fine-tune the tasks based on [DeBERTa-Large-MNLI](https://huggingface.co/microsoft/deberta-large-mnli), [DeBERTa-XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli), [DeBERTa-V2-XLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xlarge-mnli), [DeBERTa-V2-XXLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xxlarge-mnli). The results of SST-2/QQP/QNLI/SQuADv2 will also be slightly improved when start from MNLI fine-tuned models, however, we only report the numbers fine-tuned from pretrained base models for those 4 tasks.
