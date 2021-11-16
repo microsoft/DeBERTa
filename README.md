@@ -48,15 +48,15 @@ Our pre-trained models are packaged into zipped files. You can download them fro
 |[XLarge](https://huggingface.co/microsoft/deberta-xlarge)|750M|1024|48| Same vocab as RoBERTa|
 |[Large](https://huggingface.co/microsoft/deberta-large)|400M|1024|24|Same vocab as RoBERTa|
 |[Base](https://huggingface.co/microsoft/deberta-base)|140M|768|12|Same vocab as RoBERTa|
-|[DeBERTa-V3-Large](https://huggingface.co/microsoft/deberta-v3-large)<sup>2</sup>|418M|1024| 24| 128K new SPM vocab|
-|[DeBERTa-V3-Base](https://huggingface.co/microsoft/deberta-v3-base)<sup>2</sup>|183M|768| 12| 128K new SPM vocab|
-|[DeBERTa-V3-Small](https://huggingface.co/microsoft/deberta-v3-small)<sup>2</sup>|143M|768| 6| 128K new SPM vocab|
-|[mDeBERTa-V3-Base](https://huggingface.co/microsoft/mdeberta)<sup>2</sup>|280M|768| 12| 250K new SPM vocab, multi-lingual model with 102 languages|
 |[V2-XXLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xxlarge-mnli)|1.5B|1536| 48|Fine-turned with MNLI |
 |[V2-XLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xlarge-mnli)|900M|1536| 24|Fine-turned with MNLI |
 |[XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli)|750M|1024|48|Fine-turned with MNLI|
 |[Large-MNLI](https://huggingface.co/microsoft/deberta-large-mnli)|400M|1024|24|Fine-turned with MNLI|
 |[Base-MNLI](https://huggingface.co/microsoft/deberta-base-mnli)|140M|768|12|Fine-turned with MNLI|
+|[DeBERTa-V3-Large](https://huggingface.co/microsoft/deberta-v3-large)<sup>2</sup>|418M|1024| 24| 128K new SPM vocab|
+|[DeBERTa-V3-Base](https://huggingface.co/microsoft/deberta-v3-base)<sup>2</sup>|183M|768| 12| 128K new SPM vocab|
+|[DeBERTa-V3-Small](https://huggingface.co/microsoft/deberta-v3-small)<sup>2</sup>|143M|768| 6| 128K new SPM vocab|
+|[mDeBERTa-V3-Base](https://huggingface.co/microsoft/mdeberta)<sup>2</sup>|280M|768| 12| 250K new SPM vocab, multi-lingual model with 102 languages|
 
 ## Note 
 - 1 This is the model(89.9) that surpassed **T5 11B(89.3) and human performance(89.8)** on **SuperGLUE** for the first time. 128K new SPM vocab. 
@@ -219,7 +219,19 @@ We present the dev results on SQuAD 1.1/2.0 and several GLUE benchmark tasks.
 | [DeBERTa-Large](https://huggingface.co/microsoft/deberta-large)<sup>1</sup> | 95.5/90.1 | 90.7/88.0 | 91.3/91.1| 96.5|95.3| 69.5| 91.0| 92.6/94.6| 92.3/- |92.8/92.5 |
 | [DeBERTa-XLarge](https://huggingface.co/microsoft/deberta-xlarge)<sup>1</sup> | -/-  | -/-  | 91.5/91.2| 97.0 | - | -    | 93.1   | 92.1/94.3    | -    |92.9/92.7|
 | [DeBERTa-V2-XLarge](https://huggingface.co/microsoft/deberta-v2-xlarge)<sup>1</sup>|95.8/90.8| 91.4/88.9|91.7/91.6| **97.5**| 95.8|71.1|**93.9**|92.0/94.2|92.3/89.8|92.9/92.9|
-|**[DeBERTa-V2-XXLarge](https://huggingface.co/microsoft/deberta-v2-xxlarge)<sup>1,2</sup>**|**96.1/91.4**|**92.2/89.7**|**91.7/91.9**|97.2|**96.0**|**72.0**| 93.5| **93.1/94.9**|**92.7/90.3** |**93.2/93.1** |
+|**[DeBERTa-V2-XXLarge](https://huggingface.co/microsoft/deberta-v2-xxlarge)<sup>1,2</sup>**|**96.1/91.4**|**92.2/89.7**|**91.7/91.9**|97.2|**96.0**|72.0| 93.5| **93.1/94.9**|**92.7/90.3** |**93.2/93.1** |
+|**[DeBERTa-V3-Large](https://huggingface.co/microsoft/deberta-v3-large)**|-/-|91.5/89.0|**91.8/91.9**|96.9|**96.0**|**75.3**| 92.7| 92.2/-|**93.0/-** |93.0/- |
+|[DeBERTa-V3-Base](https://huggingface.co/microsoft/deberta-v3-base)|-/-|88.4/85.4|90.6/90.7|-|-|-| -| -|- |- |
+|[DeBERTa-V3-Small](https://huggingface.co/microsoft/deberta-v3-base)|-/-|82.9/80.4|88.2/87.9|-|-|-| -| -|- |- |
+
+#### Fine-tuning on XNLI
+
+We present the dev results on XNLI with zero-shot crosslingual transfer setting, i.e. training with english data only, test on other languages.
+
+| Model        |avg | en |  fr| es  | de  | el  | bg  | ru  |tr   |ar   |vi   | th  | zh | hi  | sw  | ur  | 
+|--------------| ----|----|----|---- |--   |--   |--   | --  |--   |--   |--   | --  | -- | --  | --  | --  |
+| XLM-R-base   |76.2 |85.8|79.7|80.7 |78.7 |77.5 |79.6 |78.1 |74.2 |73.8 |76.5 |74.6 |76.7| 72.4| 66.5| 68.3|
+| [mDeBERTa-V3-Base](https://huggingface.co/microsoft/mdeberta-v3-base)|**79.8**+/-0.2|**88.2**|**82.6**|**84.4** |**82.7** |**82.3** |**82.4** |**80.8** |**79.5** |**78.5** |**78.1** |**76.4** |**79.5**| **75.9**| **73.9**| **72.4**|
 
 --------
 #### Notes.
