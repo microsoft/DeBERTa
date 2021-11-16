@@ -28,11 +28,6 @@ With DeBERTa 1.5B model, we surpass T5 11B model and human performance on SuperG
 ### 06/13/2020
 We released the pre-trained models, source code, and fine-tuning scripts to reproduce some of the experimental results in the paper. You can follow similar scripts to apply DeBERTa to your own experiments or applications. Pre-training scripts will be released in the next step. 
 
-## TODOs
-- [x] Add SuperGLUE tasks
-- [x] Add SiFT code
-- [x] Add Pretraining code
-
 
 ## Introduction to DeBERTa 
 DeBERTa (Decoding-enhanced BERT with disentangled attention) improves the BERT and RoBERTa models using two novel techniques. The first is the disentangled attention mechanism, where each word is represented using two vectors that encode its content and position, respectively, and the attention weights among words are computed using disentangled matrices on their contents and relative positions. Second, an enhanced mask decoder is used to replace the output softmax layer to predict the masked tokens for model pretraining. We show that these two techniques significantly improve the efficiency of model pre-training and performance of downstream tasks.
