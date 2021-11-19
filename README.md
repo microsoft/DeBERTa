@@ -4,7 +4,7 @@ This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**
 
 ## News
 ### 11/16/2021
-- [DeBERTa V3 models](https://huggingface.co/models?other=deberta-v3) are publicly available now. The new models are based on DeBERTa-V2 models by replacing MLM with ELECTRA-style objective plus gradient-disentangled embedding sharing which further improves the model efficiency.
+- The models of our new work [DeBERTa V3: Improving DeBERTa using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing](https://arxiv.org/abs/2111.09543) are publicly available at [huggineface model hub](https://huggingface.co/models?other=deberta-v3) now. The new models are based on DeBERTa-V2 models by replacing MLM with ELECTRA-style objective plus gradient-disentangled embedding sharing which further improves the model efficiency.
 - Scripts for DeBERTa V3 model fine-tuning are added
 
 ### 3/31/2021
@@ -238,14 +238,25 @@ We present the dev results on XNLI with zero-shot crosslingual transfer setting,
 Pengcheng He(penhe@microsoft.com), Xiaodong Liu(xiaodl@microsoft.com), Jianfeng Gao(jfgao@microsoft.com), Weizhu Chen(wzchen@microsoft.com)
 
 # Citation
+``` latex
+@misc{he2021debertav3,
+      title={DeBERTaV3: Improving DeBERTa using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing}, 
+      author={Pengcheng He and Jianfeng Gao and Weizhu Chen},
+      year={2021},
+      eprint={2111.09543},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
 ```
-@misc{he2020deberta,
-    title={DeBERTa: Decoding-enhanced BERT with Disentangled Attention},
-    author={Pengcheng He and Xiaodong Liu and Jianfeng Gao and Weizhu Chen},
-    year={2020},
-    eprint={2006.03654},
-    archivePrefix={arXiv},
-    primaryClass={cs.CL}
+
+``` latex
+@inproceedings{
+he2021deberta,
+title={DEBERTA: DECODING-ENHANCED BERT WITH DISENTANGLED ATTENTION},
+author={Pengcheng He and Xiaodong Liu and Jianfeng Gao and Weizhu Chen},
+booktitle={International Conference on Learning Representations},
+year={2021},
+url={https://openreview.net/forum?id=XPZIaotutsD}
 }
 ```
 
