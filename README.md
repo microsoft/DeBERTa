@@ -201,7 +201,7 @@ And here are the results from the Base model
 |MNLI base|	`experiments/glue/mnli.sh base`|	88.8/88.5 +/-0.2|	1.5h|
 
 
-#### Fine-tuning on NLU tasks
+### Fine-tuning on NLU tasks
 
 We present the dev results on SQuAD 1.1/2.0 and several GLUE benchmark tasks.
 
@@ -219,7 +219,7 @@ We present the dev results on SQuAD 1.1/2.0 and several GLUE benchmark tasks.
 |[DeBERTa-V3-Base](https://huggingface.co/microsoft/deberta-v3-base)|-/-|88.4/85.4|90.6/90.7|-|-|-| -| -|- |- |
 |[DeBERTa-V3-Small](https://huggingface.co/microsoft/deberta-v3-base)|-/-|82.9/80.4|88.2/87.9|-|-|-| -| -|- |- |
 
-#### Fine-tuning on XNLI
+### Fine-tuning on XNLI
 
 We present the dev results on XNLI with zero-shot crosslingual transfer setting, i.e. training with english data only, test on other languages.
 
@@ -231,7 +231,11 @@ We present the dev results on XNLI with zero-shot crosslingual transfer setting,
 --------
 #### Notes.
  - <sup>1</sup> Following RoBERTa, for RTE, MRPC, STS-B, we fine-tune the tasks based on [DeBERTa-Large-MNLI](https://huggingface.co/microsoft/deberta-large-mnli), [DeBERTa-XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli), [DeBERTa-V2-XLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xlarge-mnli), [DeBERTa-V2-XXLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xxlarge-mnli). The results of SST-2/QQP/QNLI/SQuADv2 will also be slightly improved when start from MNLI fine-tuned models, however, we only report the numbers fine-tuned from pretrained base models for those 4 tasks.
- 
+
+### Pre-training with MLM and RTD objectives
+
+To pre-train DeBERTa with MLM and RTD objectives, please check [`experiments/language_models`](experiments/language_model)
+
  
 ## Contacts
 
@@ -260,17 +264,5 @@ url={https://openreview.net/forum?id=XPZIaotutsD}
 }
 ```
 
-# Contributing
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
-
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
