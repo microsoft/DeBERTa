@@ -20,6 +20,19 @@ setup_glue_data $Task
 init=$1
 tag=$init
 case ${init,,} in
+	bert-xsmall)
+	init=/tmp/ttonly/bert-xsmall/discriminator/pytorch.model-1000000.bin
+	vocab_type=spm
+	vocab_path=/tmp/ttonly/bert-xsmall/discriminator/spm.model
+	parameters=" --num_train_epochs 3 \
+	--fp16 True \
+	--warmup 1500 \
+	--learning_rate 1e-4 \
+	--vocab_type $vocab_type \
+	--vocab_path $vocab_path \
+	--train_batch_size 64 \
+	--cls_drop_out 0.1 "
+		;;
 	deberta-v3-small)
 	parameters=" --num_train_epochs 2 \
 	--fp16 False \
@@ -144,11 +157,13 @@ case ${init,,} in
 		;;
 esac
 
+export MASTER_PORT=12456
 python -m DeBERTa.apps.run --model_config config.json  \
 	--tag $tag \
 	--do_train \
 	--max_seq_len 256 \
 	--eval_batch_size 256 \
+	--dump_interval 1000 \
 	--task_name $Task \
 	--data_dir $cache_dir/glue_tasks/$Task \
 	--init_model $init \

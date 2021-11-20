@@ -21,17 +21,20 @@ import numpy as np
 import math
 import torch
 import json
+import shutil
 from torch.utils.data import DataLoader
 from ..utils import *
 from ..utils import xtqdm as tqdm
 from ..sift import AdversarialLearner,hook_sift_layer
 from .tasks import load_tasks,get_task
+from ._utils import merge_distributed, join_chunks
 
 import pdb
 
-import LASER
-from LASER.training import DistributedTrainer, initialize_distributed, batch_to, set_random_seed,kill_children
-from LASER.data import DistributedBatchSampler, SequentialSampler, BatchSampler, AsyncDataLoader
+from ..training import DistributedTrainer, initialize_distributed, batch_to, set_random_seed,kill_children
+from ..data import DistributedBatchSampler, SequentialSampler, BatchSampler, AsyncDataLoader
+from ..training import get_args as get_training_args
+from ..optims import get_args as get_optims_args
 
 def create_model(args, num_labels, model_class_fn):
   # Prepare model
@@ -46,7 +49,7 @@ def create_model(args, num_labels, model_class_fn):
   logger.info(f'Total parameters: {sum([p.numel() for p in model.parameters()])}')
   return model
 
-def train_model(args, model, device, train_data, eval_data, run_eval_fn):
+def train_model(args, model, device, train_data, eval_data, run_eval_fn, train_fn=None, loss_fn=None):
   total_examples = len(train_data)
   num_train_steps = int(len(train_data)*args.num_train_epochs / args.train_batch_size)
   logger.info("  Training batch size = %d", args.train_batch_size)
@@ -60,76 +63,45 @@ def train_model(args, model, device, train_data, eval_data, run_eval_fn):
     eval_metric = np.mean([v[0] for k,v in results.items() if 'train' not in k])
     return eval_metric
 
-  def loss_fn(trainer, model, data):
+  def _loss_fn(trainer, model, data):
     output = model(**data)
     loss = output['loss']
     return loss.mean(), data['input_ids'].size(0)
   
-  adv_modules = hook_sift_layer(model, hidden_size=model.config.hidden_size, learning_rate=args.vat_learning_rate, init_perturbation=args.vat_init_perturbation)
-  adv = AdversarialLearner(model, adv_modules)
-  def adv_loss_fn(trainer, model, data):
-    output = model(**data)
-    logits = output['logits']
-    loss = output['loss']
-    if isinstance(logits, Sequence):
-      logits = logits[-1]
-    v_teacher = []
+  def _train_fn(args, model, device, data_fn, eval_fn, loss_fn):
+    adv_modules = hook_sift_layer(model, hidden_size=model.config.hidden_size, learning_rate=args.vat_learning_rate, init_perturbation=args.vat_init_perturbation)
+    adv = AdversarialLearner(model, adv_modules)
+    def adv_loss_fn(trainer, model, data):
+      output = model(**data)
+      logits = output['logits']
+      loss = output['loss']
+      if isinstance(logits, Sequence):
+        logits = logits[-1]
+      v_teacher = []
+  
+      t_logits = None
+      if args.vat_lambda>0:
+        def pert_logits_fn(model, **data):
+          o = model(**data)
+          logits = o['logits']
+          if isinstance(logits, Sequence):
+            logits = logits[-1]
+          return logits
+  
+        loss += adv.loss(logits, pert_logits_fn, loss_fn = args.vat_loss_fn, **data)*args.vat_lambda
+  
+      return loss.mean(), data['input_ids'].size(0)
+    
+    if loss_fn is None:
+      loss_fn = adv_loss_fn
+  
+    trainer = DistributedTrainer(args, args.output_dir, model, device, data_fn, loss_fn = loss_fn, eval_fn = eval_fn, dump_interval = args.dump_interval)
+    trainer.train()
 
-    t_logits = None
-    if args.vat_lambda>0:
-      def pert_logits_fn(model, **data):
-        o = model(**data)
-        logits = o['logits']
-        if isinstance(logits, Sequence):
-          logits = logits[-1]
-        return logits
+  if train_fn is None:
+    train_fn = _train_fn
 
-      loss += adv.loss(logits, pert_logits_fn, loss_fn = args.vat_loss_fn, **data)*args.vat_lambda
-
-    return loss.mean(), data['input_ids'].size(0)
-
-  trainer = DistributedTrainer(args, args.output_dir, model, device, data_fn, loss_fn = adv_loss_fn, eval_fn = eval_fn, dump_interval = args.dump_interval)
-  trainer.train()
-
-def merge_distributed(data_list, max_len=None):
-  merged = []
-  def gather(data):
-    data_size = [torch.zeros(data.dim(), dtype=torch.int).to(data.device) for _ in range(args.world_size)]
-    torch.distributed.all_gather(data_size, torch.tensor(data.size()).to(data_size[0]))
-    data_chunks = [torch.zeros(tuple(s.cpu().numpy())).to(data) for s in data_size]
-    data_chunks[data.device.index] = data
-    for i,_chunk in enumerate(data_chunks):
-      torch.distributed.broadcast(_chunk, src=i)
-    return data_chunks
-
-  for data in data_list:
-    if torch.distributed.is_initialized() and torch.distributed.get_world_size()>1:
-      if isinstance(data, Sequence):
-        data_chunks = []
-        for d in data:
-          chunks_ = gather(d)
-          data_ = torch.cat(chunks_)
-          data_chunks.append(data_)
-        merged.append(data_chunks)
-      else:
-        _chunks = gather(data)
-        merged.extend(_chunks)
-    else:
-      merged.append(data)
-  if not isinstance(merged[0], Sequence):
-    merged = torch.cat([m.cpu() for m in merged])
-    if max_len is not None:
-      return merged[:max_len]
-    else:
-      return merged
-  else:
-    data_list=[]
-    for d in zip(*merged):
-      data = torch.cat([x.cpu() for x in d])
-      if max_len is not None:
-        data = data[:max_len]
-      data_list.append(data)
-    return data_list
+  train_fn(args, model, device, data_fn = data_fn, eval_fn = eval_fn, loss_fn = loss_fn)
 
 def calc_metrics(predicts, labels, eval_loss, eval_item, eval_results, args, name, prefix, steps, tag):
   tb_metrics = OrderedDict()
@@ -280,12 +252,14 @@ def main(args):
   if args.do_train:
     with open(os.path.join(args.output_dir, 'model_config.json'), 'w', encoding='utf-8') as fs:
       fs.write(model.config.to_json_string() + '\n')
+    shutil.copy(args.vocab_path, args.output_dir)
   logger.info("Model config {}".format(model.config))
   device = initialize_distributed(args)
   if not isinstance(device, torch.device):
     return 0
   model.to(device)
-  run_eval_fn = task.run_eval_fn()
+  run_eval_fn = task.get_eval_fn()
+  loss_fn = task.get_loss_fn(args)
   if run_eval_fn is None:
     run_eval_fn = run_eval
   
@@ -293,7 +267,8 @@ def main(args):
     run_eval(args, model, device, eval_data, prefix=args.tag)
 
   if args.do_train:
-    train_model(args, model, device, train_data, eval_data, run_eval_fn)
+    train_fn = task.get_train_fn(args, model)
+    train_model(args, model, device, train_data, eval_data, run_eval_fn, loss_fn=loss_fn, train_fn = train_fn)
 
   if args.do_predict:
     run_predict(args, model, device, test_data, prefix=args.tag)
@@ -317,7 +292,7 @@ class LoadTaskAction(argparse.Action):
       type(self)._registered = True
 
 def build_argument_parser():
-  parser = argparse.ArgumentParser(parents=[LASER.optims.get_args(), LASER.training.get_args()], formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  parser = argparse.ArgumentParser(parents=[get_optims_args(), get_training_args()], formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
   ## Required parameters
   parser.add_argument("--task_dir",

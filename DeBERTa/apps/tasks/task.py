@@ -64,10 +64,16 @@ class Task():
     label_dict = {l:i for i,l in enumerate(self.get_labels())}
     return label_dict[labelstr] if labelstr in label_dict else -1
 
-  def run_eval_fn(self):
+  def get_train_fn(self, *args, **kwargs):
     return None
 
-  def run_pred_fn(self):
+  def get_eval_fn(self, *args, **kwargs):
+    return None
+
+  def get_pred_fn(self, *args, **kwargs):
+    return None
+
+  def get_loss_fn(self, *args, **kwargs):
     return None
 
   def get_metrics_fn(self):
