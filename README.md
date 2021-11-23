@@ -51,7 +51,7 @@ Our pre-trained models are packaged into zipped files. You can download them fro
 |[DeBERTa-V3-Large](https://huggingface.co/microsoft/deberta-v3-large)<sup>2</sup>|418M|1024| 24| 128K new SPM vocab|
 |[DeBERTa-V3-Base](https://huggingface.co/microsoft/deberta-v3-base)<sup>2</sup>|183M|768| 12| 128K new SPM vocab|
 |[DeBERTa-V3-Small](https://huggingface.co/microsoft/deberta-v3-small)<sup>2</sup>|143M|768| 6| 128K new SPM vocab|
-|[mDeBERTa-V3-Base](https://huggingface.co/microsoft/mdeberta)<sup>2</sup>|280M|768| 12| 250K new SPM vocab, multi-lingual model with 102 languages|
+|[mDeBERTa-V3-Base](https://huggingface.co/microsoft/mdeberta-v3-base)<sup>2</sup>|280M|768| 12| 250K new SPM vocab, multi-lingual model with 102 languages|
 
 ## Note 
 - 1 This is the model(89.9) that surpassed **T5 11B(89.3) and human performance(89.8)** on **SuperGLUE** for the first time. 128K new SPM vocab. 
