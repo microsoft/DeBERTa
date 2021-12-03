@@ -6,6 +6,8 @@ This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**
 ### 11/16/2021
 - The models of our new work [DeBERTa V3: Improving DeBERTa using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing](https://arxiv.org/abs/2111.09543) are publicly available at [huggingface model hub](https://huggingface.co/models?other=deberta-v3) now. The new models are based on DeBERTa-V2 models by replacing MLM with ELECTRA-style objective plus gradient-disentangled embedding sharing which further improves the model efficiency.
 - Scripts for DeBERTa V3 model fine-tuning are added
+- Code of RTD task head is added
+- [Document](experiments/language_model) for pre-training is added
 
 ### 3/31/2021
 - Masked language model task is added
