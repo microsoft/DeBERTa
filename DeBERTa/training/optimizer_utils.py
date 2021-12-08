@@ -56,7 +56,7 @@ def create_xoptimizer(model, args, num_train_steps=None, no_decay=['bias', 'Laye
 
   opt_fn = xadam_factory(args, num_train_steps)
   
-  named_params = list(model.named_parameters())
+  named_params = [(n,p) for n,p in model.named_parameters() if p.requires_grad]
   param_size = [p.numel() for n,p in named_params]
   type_groups = defaultdict(list)
   if distributed_optimizer:

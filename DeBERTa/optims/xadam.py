@@ -39,7 +39,6 @@ def adamw(data,
   grad = grad.float()
   if grad_scale != 1:
     grad *= 1/grad_scale
-  grad = grad.to(next_m)
   next_m.mul_(beta1).add_(beta1_, grad)
   # admax
   admax = eps_mode>>4
@@ -55,7 +54,6 @@ def adamw(data,
       update = (next_m)/(next_v.sqrt()+eps)
     else: #=2
       update = next_m.clone()
-
   if weight_decay>0:
     update.add_(weight_decay, data)
 
@@ -187,7 +185,6 @@ class XAdam(Optimizer):
         out_p = torch.tensor([], dtype=torch.float).to(param.data)
       
       weight_decay = group['weight_decay_rate']
-
       adamw(param.data,
                     out_p,
                     next_m,

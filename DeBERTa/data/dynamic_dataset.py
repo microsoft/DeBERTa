@@ -7,6 +7,7 @@
 # Date: 05/15/2019
 #
 
+import pdb
 from torch.utils.data import Dataset
 import random
 import mmap
@@ -34,7 +35,8 @@ class DynamicDataset(Dataset):
     shuffle_idx = np.ndarray(shape=(self.dataset_size, ), buffer=index_buf, dtype=np.int)
     shuffle_idx[:] = np.arange(self.dataset_size)[:]
     if self.shuffle:
-      rng = np.random.RandomState(0)
+      #rng = np.random.RandomState(0)
+      rng = random.Random(0)
       rng.shuffle(shuffle_idx)
     self.shuffle_idx = shuffle_idx
     self.index_offset = 0

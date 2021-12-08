@@ -17,6 +17,8 @@ function setup_glue_data(){
 Task=MNLI
 setup_glue_data $Task
 
+#export CUDA_VISIBLE_DEVICES=0
+
 init=$1
 tag=$init
 case ${init,,} in
@@ -33,10 +35,31 @@ case ${init,,} in
 	--train_batch_size 64 \
 	--cls_drop_out 0.1 "
 		;;
-	deberta-v3-small)
-	parameters=" --num_train_epochs 2 \
-	--fp16 False \
+	deberta-v3-xsmall)
+	parameters=" --num_train_epochs 3 \
+	--fp16 True \
 	--warmup 1000 \
+	--learning_rate 4.5e-5 \
+	--workers 2 \
+	--train_batch_size 64 \
+	--cls_drop_out 0.10 "
+		;;
+	deberta-v3-xsmall-sift)
+	init=deberta-v3-xsmall
+	parameters=" --num_train_epochs 10 \
+	--fp16 True \
+	--warmup 1500 \
+	--learning_rate 5e-5 \
+	--vat_lambda 3 \
+	--vat_learning_rate 1e-4 \
+	--vat_init_perturbation 1e-2 \
+	--train_batch_size 64 \
+	--cls_drop_out 0.10 "
+		;;
+	deberta-v3-small)
+	parameters=" --num_train_epochs 3 \
+	--fp16 True \
+	--warmup 1500 \
 	--learning_rate 4.5e-5 \
 	--train_batch_size 64 \
 	--cls_drop_out 0.20 "

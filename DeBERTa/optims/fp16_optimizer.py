@@ -13,6 +13,7 @@ from collections import defaultdict
 import numpy as np
 import math
 import torch
+import pdb
 import torch.distributed as dist
 from torch._utils import _flatten_dense_tensors, _unflatten_dense_tensors
 import ctypes
@@ -199,7 +200,7 @@ class Fp16Optimizer(object):
     max_grad = 0
     
     all_grads = []
-    for name in sorted(named_params.keys()):
+    for name in sorted(named_params.keys(), key=lambda x:x.replace('deberta.', 'bert.')):
       group.append(name)
       group_size += named_params[name].data.numel()
       if group_size>=max_size:
@@ -212,7 +213,6 @@ class Fp16Optimizer(object):
       all_grads.append([handle, flatten, group])
       group = []
       group_size = 0
-
     for h,fg,group in all_grads:
       if h is not None:
         h.wait()

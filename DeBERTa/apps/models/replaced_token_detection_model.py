@@ -36,7 +36,7 @@ class LMMaskPredictionHead(nn.Module):
     self.transform_act_fn = ACT2FN[config.hidden_act] \
       if isinstance(config.hidden_act, str) else config.hidden_act
     self.LayerNorm = LayerNorm(config.hidden_size, config.layer_norm_eps)
-    self.classifer = nn.Linear(config.hidden_size, 1)
+    self.classifier = nn.Linear(config.hidden_size, 1)
 
   def forward(self, hidden_states, input_ids, input_mask, lm_labels=None):
     # b x d
@@ -46,7 +46,7 @@ class LMMaskPredictionHead(nn.Module):
     seq_states = self.transform_act_fn(seq_states)
 
     # b x max_len
-    logits = self.classifer(seq_states).squeeze(-1)
+    logits = self.classifier(seq_states).squeeze(-1)
     mask_loss = torch.tensor(0).to(logits).float()
     mask_labels = None
     if lm_labels is not None:

@@ -45,6 +45,7 @@ pretrained_models= {
     'deberta-v3-base': PretrainedModel('deberta-v3-base', 'spm.model', 'spm'),
     'deberta-v3-large': PretrainedModel('deberta-v3-large', 'spm.model', 'spm'),
     'mdeberta-v3-base': PretrainedModel('mdeberta-v3-base', 'spm.model', 'spm'),
+    'deberta-v3-xsmall': PretrainedModel('deberta-v3-xsmall', 'spm.model', 'spm'),
   }
 
 def download_asset(url, name, tag=None, no_cache=False, cache_dir=None):
@@ -102,6 +103,8 @@ def load_model_state(path_or_pretrained_id, tag=None, no_cache=False, cache_dir=
     model_config = ModelConfig.from_dict(model_state['config'])
   elif os.path.exists(config_path):
     model_config = ModelConfig.from_json_file(config_path)
+  else:
+    model_config = None
   return model_state, model_config
 
 def load_vocab(vocab_path=None, vocab_type=None, pretrained_id=None, tag=None, no_cache=False, cache_dir=None):
