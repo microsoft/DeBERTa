@@ -4,7 +4,7 @@ This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**
 
 ## News
 ### 12/8/2021
-- [DeBERTa-V3-XSmall](https://huggingface.co/microsoft/deberta-v3-xsmall) was added. With only **22M** backbone parameters which is only 1/4 of RoBERTa-Base and XLNet-Base, DeBERTa-V3-XSmall significantly outperforms the later on MNLI and SQuAD v2.0 tasks (i.e. 1.2% on MNLI-m, 1.5% EM score on SQuAD v2.0). This further demnostrates the efficiency of DeBERTaV3 models.
+- [DeBERTa-V3-XSmall](https://huggingface.co/microsoft/deberta-v3-xsmall) is added. With only **22M** backbone parameters which is only 1/4 of RoBERTa-Base and XLNet-Base, DeBERTa-V3-XSmall significantly outperforms the later on MNLI and SQuAD v2.0 tasks (i.e. 1.2% on MNLI-m, 1.5% EM score on SQuAD v2.0). This further demnostrates the efficiency of DeBERTaV3 models.
 
 ### 11/16/2021
 - The models of our new work [DeBERTa V3: Improving DeBERTa using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing](https://arxiv.org/abs/2111.09543) are publicly available at [huggingface model hub](https://huggingface.co/models?other=deberta-v3) now. The new models are based on DeBERTa-V2 models by replacing MLM with ELECTRA-style objective plus gradient-disentangled embedding sharing which further improves the model efficiency.
