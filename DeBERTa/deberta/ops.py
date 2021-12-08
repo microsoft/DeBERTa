@@ -7,6 +7,7 @@
 # Date: 01/15/2020
 #
 
+import pdb
 import math
 from packaging import version
 import torch
@@ -219,6 +220,6 @@ def swish(x):
 def linear_act(x):
   return x
 
-ACT2FN = {"gelu": gelu, "relu": torch.nn.functional.relu, "swish": swish, "tanh": torch.tanh, "linear": linear_act, 'sigmoid': torch.sigmoid}
+ACT2FN = {"gelu": torch.nn.functional.gelu, "relu": torch.nn.functional.relu, "swish": swish, "tanh": torch.tanh, "linear": linear_act, 'sigmoid': torch.sigmoid}
 
 

@@ -131,8 +131,8 @@ class BertEncoder(nn.Module):
   """
   def __init__(self, config):
     super().__init__()
-    layer = BertLayer(config)
-    self.layer = nn.ModuleList([copy.deepcopy(layer) for _ in range(config.num_hidden_layers)])
+    #layer = BertLayer(config)
+    self.layer = nn.ModuleList([BertLayer(config) for _ in range(config.num_hidden_layers)])
     self.relative_attention = getattr(config, 'relative_attention', False)
     if self.relative_attention:
       self.max_relative_positions = getattr(config, 'max_relative_positions', -1)
@@ -227,7 +227,6 @@ class BertEmbeddings(nn.Module):
     padding_idx = getattr(config, 'padding_idx', 0)
     self.embedding_size = getattr(config, 'embedding_size', config.hidden_size)
     self.word_embeddings = nn.Embedding(config.vocab_size, self.embedding_size, padding_idx = padding_idx)
-
     self.position_biased_input = getattr(config, 'position_biased_input', True)
     self.position_embeddings = nn.Embedding(config.max_position_embeddings, self.embedding_size)
 
@@ -262,7 +261,6 @@ class BertEmbeddings(nn.Module):
 
     if self.embedding_size != self.config.hidden_size:
       embeddings = self.embed_proj(embeddings)
-
     embeddings = MaskedLayerNorm(self.LayerNorm, embeddings, mask)
     embeddings = self.dropout(embeddings)
     return {

@@ -1,8 +1,11 @@
 # DeBERTa: Decoding-enhanced BERT with Disentangled Attention
 
-This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**e**nhanced **BERT** with Disentangled **A**ttention ](https://arxiv.org/abs/2006.03654)
+This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**e**nhanced **BERT** with Disentangled **A**ttention ](https://arxiv.org/abs/2006.03654) and [DeBERTa V3: Improving DeBERTa using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing](https://arxiv.org/abs/2111.09543)
 
 ## News
+### 12/8/2021
+- [DeBERTa-V3-XSmall](https://huggingface.co/microsoft/deberta-v3-xsmall) was added. With only **22M** backbone parameters which is only 1/4 of RoBERTa-Base and XLNet-Base, DeBERTa-V3-XSmall significantly outperforms the later on MNLI and SQuAD v2.0 tasks (i.e. 1.2% on MNLI-m, 1.5% EM score on SQuAD v2.0). This further demnostrates the efficiency of DeBERTaV3 models.
+
 ### 11/16/2021
 - The models of our new work [DeBERTa V3: Improving DeBERTa using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing](https://arxiv.org/abs/2111.09543) are publicly available at [huggingface model hub](https://huggingface.co/models?other=deberta-v3) now. The new models are based on DeBERTa-V2 models by replacing MLM with ELECTRA-style objective plus gradient-disentangled embedding sharing which further improves the model efficiency.
 - Scripts for DeBERTa V3 model fine-tuning are added
@@ -38,22 +41,23 @@ DeBERTa (Decoding-enhanced BERT with disentangled attention) improves the BERT a
 
 Our pre-trained models are packaged into zipped files. You can download them from our [releases](https://huggingface.co/models?search=microsoft%2Fdeberta), or download an individual model via the links below:
 
-|Model        | Parameters| Hidden Size | Layers| Note|
-|-------------|------|-----|-----|---------|
-|**[V2-XXLarge](https://huggingface.co/microsoft/deberta-v2-xxlarge)<sup>1</sup>**|1.5B|1536| 48|128K new SPM vocab |
-|[V2-XLarge](https://huggingface.co/microsoft/deberta-v2-xlarge)|900M|1536| 24| 128K new SPM vocab|
-|[XLarge](https://huggingface.co/microsoft/deberta-xlarge)|750M|1024|48| Same vocab as RoBERTa|
-|[Large](https://huggingface.co/microsoft/deberta-large)|400M|1024|24|Same vocab as RoBERTa|
-|[Base](https://huggingface.co/microsoft/deberta-base)|140M|768|12|Same vocab as RoBERTa|
-|[V2-XXLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xxlarge-mnli)|1.5B|1536| 48|Fine-turned with MNLI |
-|[V2-XLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xlarge-mnli)|900M|1536| 24|Fine-turned with MNLI |
-|[XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli)|750M|1024|48|Fine-turned with MNLI|
-|[Large-MNLI](https://huggingface.co/microsoft/deberta-large-mnli)|400M|1024|24|Fine-turned with MNLI|
-|[Base-MNLI](https://huggingface.co/microsoft/deberta-base-mnli)|140M|768|12|Fine-turned with MNLI|
-|[DeBERTa-V3-Large](https://huggingface.co/microsoft/deberta-v3-large)<sup>2</sup>|418M|1024| 24| 128K new SPM vocab|
-|[DeBERTa-V3-Base](https://huggingface.co/microsoft/deberta-v3-base)<sup>2</sup>|183M|768| 12| 128K new SPM vocab|
-|[DeBERTa-V3-Small](https://huggingface.co/microsoft/deberta-v3-small)<sup>2</sup>|143M|768| 6| 128K new SPM vocab|
-|[mDeBERTa-V3-Base](https://huggingface.co/microsoft/mdeberta-v3-base)<sup>2</sup>|280M|768| 12| 250K new SPM vocab, multi-lingual model with 102 languages|
+|Model        | Vocabulary(K)|Backbone Parameters(M)| Hidden Size | Layers| Note|
+|-------------|------|---------|-----|-----|---------|
+|**[V2-XXLarge](https://huggingface.co/microsoft/deberta-v2-xxlarge)<sup>1</sup>**|128|1320|1536| 48|128K new SPM vocab |
+|[V2-XLarge](https://huggingface.co/microsoft/deberta-v2-xlarge)|128|710|1536| 24| 128K new SPM vocab|
+|[XLarge](https://huggingface.co/microsoft/deberta-xlarge)|50|700|1024|48| Same vocab as RoBERTa|
+|[Large](https://huggingface.co/microsoft/deberta-large)|50|350|1024|24|Same vocab as RoBERTa|
+|[Base](https://huggingface.co/microsoft/deberta-base)|50|100|768|12|Same vocab as RoBERTa|
+|[V2-XXLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xxlarge-mnli)|128|1320|1536| 48|Fine-turned with MNLI |
+|[V2-XLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xlarge-mnli)|128|710|1536| 24|Fine-turned with MNLI |
+|[XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli)|50|700|1024|48|Fine-turned with MNLI|
+|[Large-MNLI](https://huggingface.co/microsoft/deberta-large-mnli)|50|350|1024|24|Fine-turned with MNLI|
+|[Base-MNLI](https://huggingface.co/microsoft/deberta-base-mnli)|50|86|768|12|Fine-turned with MNLI|
+|[DeBERTa-V3-Large](https://huggingface.co/microsoft/deberta-v3-large)<sup>2</sup>|128|304|1024| 24| 128K new SPM vocab|
+|[DeBERTa-V3-Base](https://huggingface.co/microsoft/deberta-v3-base)<sup>2</sup>|128|86|768| 12| 128K new SPM vocab|
+|[DeBERTa-V3-Small](https://huggingface.co/microsoft/deberta-v3-small)<sup>2</sup>|128|44|768| 6| 128K new SPM vocab|
+|[DeBERTa-V3-XSmall](https://huggingface.co/microsoft/deberta-v3-xsmall)<sup>2</sup>|128|22|384| 12| 128K new SPM vocab|
+|[mDeBERTa-V3-Base](https://huggingface.co/microsoft/mdeberta-v3-base)<sup>2</sup>|250|86|768| 12| 250K new SPM vocab, multi-lingual model with 102 languages|
 
 ## Note 
 - 1 This is the model(89.9) that surpassed **T5 11B(89.3) and human performance(89.8)** on **SuperGLUE** for the first time. 128K new SPM vocab. 
@@ -219,7 +223,8 @@ We present the dev results on SQuAD 1.1/2.0 and several GLUE benchmark tasks.
 |**[DeBERTa-V2-XXLarge](https://huggingface.co/microsoft/deberta-v2-xxlarge)<sup>1,2</sup>**|**96.1/91.4**|**92.2/89.7**|**91.7/91.9**|97.2|**96.0**|72.0| 93.5| **93.1/94.9**|**92.7/90.3** |**93.2/93.1** |
 |**[DeBERTa-V3-Large](https://huggingface.co/microsoft/deberta-v3-large)**|-/-|91.5/89.0|**91.8/91.9**|96.9|**96.0**|**75.3**| 92.7| 92.2/-|**93.0/-** |93.0/- |
 |[DeBERTa-V3-Base](https://huggingface.co/microsoft/deberta-v3-base)|-/-|88.4/85.4|90.6/90.7|-|-|-| -| -|- |- |
-|[DeBERTa-V3-Small](https://huggingface.co/microsoft/deberta-v3-base)|-/-|82.9/80.4|88.2/87.9|-|-|-| -| -|- |- |
+|[DeBERTa-V3-Small](https://huggingface.co/microsoft/deberta-v3-small)|-/-|82.9/80.4|88.3/87.7|-|-|-| -| -|- |- |
+|[DeBERTa-V3-XSmall](https://huggingface.co/microsoft/deberta-v3-xsmall)|-/-|84.8/82.0|88.1/88.3|-|-|-| -| -|- |- |
 
 ### Fine-tuning on XNLI
 
@@ -265,6 +270,4 @@ year={2021},
 url={https://openreview.net/forum?id=XPZIaotutsD}
 }
 ```
-
-
 

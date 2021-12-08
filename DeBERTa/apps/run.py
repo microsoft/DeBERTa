@@ -67,8 +67,8 @@ def train_model(args, model, device, train_data, eval_data, run_eval_fn, train_f
     output = model(**data)
     loss = output['loss']
     return loss.mean(), data['input_ids'].size(0)
-  
-  def _train_fn(args, model, device, data_fn, eval_fn, loss_fn):
+
+  def get_adv_loss_fn():
     adv_modules = hook_sift_layer(model, hidden_size=model.config.hidden_size, learning_rate=args.vat_learning_rate, init_perturbation=args.vat_init_perturbation)
     adv = AdversarialLearner(model, adv_modules)
     def adv_loss_fn(trainer, model, data):
@@ -91,9 +91,12 @@ def train_model(args, model, device, train_data, eval_data, run_eval_fn, train_f
         loss += adv.loss(logits, pert_logits_fn, loss_fn = args.vat_loss_fn, **data)*args.vat_lambda
   
       return loss.mean(), data['input_ids'].size(0)
+    return adv_loss_fn
+  
+  def _train_fn(args, model, device, data_fn, eval_fn, loss_fn):
     
     if loss_fn is None:
-      loss_fn = adv_loss_fn
+      loss_fn = get_adv_loss_fn() if args.vat_lambda>0 else _loss_fn
   
     trainer = DistributedTrainer(args, args.output_dir, model, device, data_fn, loss_fn = loss_fn, eval_fn = eval_fn, dump_interval = args.dump_interval)
     trainer.train()
@@ -252,7 +255,7 @@ def main(args):
   if args.do_train:
     with open(os.path.join(args.output_dir, 'model_config.json'), 'w', encoding='utf-8') as fs:
       fs.write(model.config.to_json_string() + '\n')
-    shutil.copy(args.vocab_path, args.output_dir)
+    shutil.copy(vocab_path, args.output_dir)
   logger.info("Model config {}".format(model.config))
   device = initialize_distributed(args)
   if not isinstance(device, torch.device):
