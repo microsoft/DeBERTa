@@ -50,18 +50,32 @@ case ${init,,} in
 		;;
 	xxlarge-v2-mnli)
 	parameters=" --num_train_epochs 6 \
-	--warmup 1000 \
-	--learning_rate 3e-6 \
-	--train_batch_size 128 \
-	--cls_drop_out 0.2 \
+	--warmup 500 \
+	--learning_rate 8e-6 \
+	--train_batch_size 256 \
+	--cls_drop_out 0.1 \
+	--fp16 True \
+	--max_seq_len 70"
+		;;
+	eval)
+	init=anli_models/avg.bin
+	vocab=anli_models/spm.model
+	
+	parameters=" --num_train_epochs 6 \
+	--warmup 500 \
+	--vocab_type spm \
+	--vocab_path $vocab \
+	--learning_rate 8e-6 \
+	--train_batch_size 256 \
+	--cls_drop_out 0.1 \
 	--fp16 True \
 	--max_seq_len 70"
 		;;
 	deberta-v3-large)
-	parameters=" --num_train_epochs 4 \
+	parameters=" --num_train_epochs 10 \
 	--warmup 1000 \
-	--learning_rate 8e-6 \
-	--train_batch_size 128 \
+	--learning_rate 7e-6 \
+	--train_batch_size 256 \
 	--cls_drop_out 0.1 \
 	--fp16 True \
 	--max_seq_len 70"
@@ -79,11 +93,13 @@ case ${init,,} in
 		;;
 esac
 
-python -m DeBERTa.apps.run --model_config config.json  \
+python  -W ignore  -m DeBERTa.apps.run --model_config config.json  \
 	--tag $tag \
 	--do_train \
 	--task_dir . \
 	--task_name $Task \
 	--init_model $init \
-	--data_dir <Your race data directory> \
+	--data_dir /mount/biglm_data/alphanli \
 	--output_dir /tmp/ttonly/$tag/$Task  $parameters
+	#--do_eval \
+	#--do_predict \
