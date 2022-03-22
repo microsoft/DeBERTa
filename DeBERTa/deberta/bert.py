@@ -9,7 +9,7 @@
 import copy
 import torch
 from torch import nn
-from collections import Sequence
+from collections.abc import Sequence
 from packaging import version
 import numpy as np
 import math

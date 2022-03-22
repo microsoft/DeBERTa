@@ -1,5 +1,6 @@
 
-from collections import OrderedDict,defaultdict,Sequence,Counter
+from collections import OrderedDict,defaultdict,Counter
+from collections.abc import Sequence
 import math
 import numpy as np
 import os

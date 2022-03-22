@@ -12,7 +12,8 @@
 import os
 os.environ["OMP_NUM_THREADS"] = "1"
 from ..deberta import tokenizers,load_vocab
-from collections import OrderedDict, Mapping, Sequence
+from collections import OrderedDict
+from collections.abc import Mapping, Sequence
 import argparse
 import random
 import time
