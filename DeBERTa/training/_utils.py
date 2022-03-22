@@ -1,5 +1,5 @@
 import torch
-from collections import Sequence, Mapping
+from collections.abc import Sequence, Mapping
 
 def batch_apply(batch, fn):
   if isinstance(batch, torch.Tensor):

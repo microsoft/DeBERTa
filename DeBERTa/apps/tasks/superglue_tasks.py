@@ -8,7 +8,8 @@
 #
 
 from glob import glob
-from collections import OrderedDict,defaultdict,Sequence,Counter
+from collections import OrderedDict,defaultdict,Counter
+from collections.abc import Sequence
 import copy
 import math
 import string
