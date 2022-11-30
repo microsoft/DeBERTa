@@ -4,7 +4,7 @@ This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**
 
 ## News
 ### 12/8/2021
-- [DeBERTa-V3-XSmall](https://huggingface.co/microsoft/deberta-v3-xsmall) is added. With only **22M** backbone parameters which is only 1/4 of RoBERTa-Base and XLNet-Base, DeBERTa-V3-XSmall significantly outperforms the later on MNLI and SQuAD v2.0 tasks (i.e. 1.2% on MNLI-m, 1.5% EM score on SQuAD v2.0). This further demnostrates the efficiency of DeBERTaV3 models.
+- [DeBERTa-V3-XSmall](https://huggingface.co/microsoft/deberta-v3-xsmall) is added. With only **22M** backbone parameters which is only 1/4 of RoBERTa-Base and XLNet-Base, DeBERTa-V3-XSmall significantly outperforms the later on MNLI and SQuAD v2.0 tasks (i.e. 1.2% on MNLI-m, 1.5% EM score on SQuAD v2.0). This further demonstrates the efficiency of DeBERTaV3 models.
 
 ### 11/16/2021
 - The models of our new work [DeBERTa V3: Improving DeBERTa using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing](https://arxiv.org/abs/2111.09543) are publicly available at [huggingface model hub](https://huggingface.co/models?other=deberta-v3) now. The new models are based on DeBERTa-V2 models by replacing MLM with ELECTRA-style objective plus gradient-disentangled embedding sharing which further improves the model efficiency.
@@ -23,8 +23,8 @@ DeBERTa v2 code and the **900M, 1.5B** [model](https://huggingface.co/models?sea
 #### What's new in v2
 - **Vocabulary** In v2 we use a new vocabulary of size 128K built from the training data. Instead of GPT2 tokenizer, we use [sentencepiece](https://github.com/google/sentencepiece) tokenizer.
 - **nGiE(nGram Induced Input Encoding)** In v2 we use an additional convolution layer aside with the first transformer layer to better learn the local dependency of input tokens. We will add more ablation studies on this feature.
-- **Sharing position projection matrix with content projection matrix in attention layer** Based on our previous experiment, we found this can save parameters without affecting the performance.
-- **Apply bucket to encode relative postions** In v2 we use log bucket to encode relative positions similar to T5. 
+- **Sharing position projection matrix with content projection matrix in attention layer** Based on our previous experiment, we found this can save parameters without affecting performance.
+- **Apply bucket to encode relative positions** In v2 we use log bucket to encode relative positions similar to T5. 
 - **900M model & 1.5B model** In v2 we scale our model size to 900M and 1.5B which significantly improves the performance of downstream tasks.
 
 ### 12/29/2020
@@ -81,9 +81,9 @@ Read our [documentation](https://deberta.readthedocs.io/en/latest/)
 There are several ways to try our code,
 ### Use docker
 
-Docker is the recommended way to run the code as we already built every dependency into the our docker [bagai/deberta](https://hub.docker.com/r/bagai/deberta) and you can follow the [docker official site](https://docs.docker.com/engine/install/ubuntu/) to install docker on your machine.
+Docker is the recommended way to run the code as we already built every dependency into our docker [bagai/deberta](https://hub.docker.com/r/bagai/deberta) and you can follow the [docker official site](https://docs.docker.com/engine/install/ubuntu/) to install docker on your machine.
 
-To run with docker, make sure your system fullfil the requirements in the above list. Here are the steps to try the GLUE experiments: Pull the code, run `./run_docker.sh` 
+To run with docker, make sure your system fulfills the requirements in the above list. Here are the steps to try the GLUE experiments: Pull the code, run `./run_docker.sh` 
 , and then you can run the bash commands under `/DeBERTa/experiments/glue/`
 
 
@@ -96,7 +96,7 @@ Pull the code and run `pip3 install -r requirements.txt` in the root directory o
 #### Use DeBERTa in existing code
 ``` Python
 
-# To apply DeBERTa into your existing code, you need to make two changes on your code,
+# To apply DeBERTa to your existing code, you need to make two changes to your code,
 # 1. change your model to consume DeBERTa as the encoder
 from DeBERTa import deberta
 import torch
@@ -120,11 +120,11 @@ class MyModel(torch.nn.Module):
     #      It's a mask to be used if the input sequence length is smaller than the max input sequence length in the current batch. 
     #      It's the mask that we typically use for attention when a batch has varying length sentences.
     #   - If it's an attention mask then if will be torch.LongTensor of shape [batch_size, sequence_length, sequence_length]. 
-    #      In this case, it's a mask indicate which tokens in the sequence should be attended by other tokens in the sequence. 
+    #      In this case, it's a mask indicating which tokens in the sequence should be attended by other tokens in the sequence. 
     # `output_all_encoded_layers`: whether to output results of all encoder layers, default, True
     encoding = deberta.bert(input_ids)[-1]
 
-# 2. Change your tokenizer with the the tokenizer built in DeBERta
+# 2. Change your tokenizer with the tokenizer built-in DeBERta
 from DeBERTa import deberta
 vocab_path, vocab_type = deberta.load_vocab(pretrained_id='base')
 tokenizer = deberta.tokenizers[vocab_type](vocab_path)
@@ -184,7 +184,7 @@ python3 -m DeBERTa.apps.run --task_name $task --do_train  \
 
 ## Experiments
 Our fine-tuning experiments are carried on half a DGX-2 node with 8x32 V100 GPU cards, the results may vary due to different GPU models, drivers, CUDA SDK versions, using FP16 or FP32, and random seeds. 
-We report our numbers based on multple runs with different random seeds here. Here are the results from the Large model:
+We report our numbers based on multiple runs with different random seeds here. Here are the results from the Large model:
 
 |Task	 |Command	|Results	|Running Time(8x32G V100 GPUs)|
 |--------|---------------|---------------|-------------------------|
@@ -237,7 +237,7 @@ We present the dev results on XNLI with zero-shot crosslingual transfer setting,
 
 --------
 #### Notes.
- - <sup>1</sup> Following RoBERTa, for RTE, MRPC, STS-B, we fine-tune the tasks based on [DeBERTa-Large-MNLI](https://huggingface.co/microsoft/deberta-large-mnli), [DeBERTa-XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli), [DeBERTa-V2-XLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xlarge-mnli), [DeBERTa-V2-XXLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xxlarge-mnli). The results of SST-2/QQP/QNLI/SQuADv2 will also be slightly improved when start from MNLI fine-tuned models, however, we only report the numbers fine-tuned from pretrained base models for those 4 tasks.
+ - <sup>1</sup> Following RoBERTa, for RTE, MRPC, STS-B, we fine-tune the tasks based on [DeBERTa-Large-MNLI](https://huggingface.co/microsoft/deberta-large-mnli), [DeBERTa-XLarge-MNLI](https://huggingface.co/microsoft/deberta-xlarge-mnli), [DeBERTa-V2-XLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xlarge-mnli), [DeBERTa-V2-XXLarge-MNLI](https://huggingface.co/microsoft/deberta-v2-xxlarge-mnli). The results of SST-2/QQP/QNLI/SQuADv2 will also be slightly improved when starting from MNLI fine-tuned models, however, we only report the numbers fine-tuned from pretrained base models for those 4 tasks.
 
 ### Pre-training with MLM and RTD objectives
 
@@ -270,4 +270,3 @@ year={2021},
 url={https://openreview.net/forum?id=XPZIaotutsD}
 }
 ```
-
