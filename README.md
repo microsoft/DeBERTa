@@ -3,6 +3,9 @@
 This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**e**nhanced **BERT** with Disentangled **A**ttention ](https://arxiv.org/abs/2006.03654) and [DeBERTa V3: Improving DeBERTa using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing](https://arxiv.org/abs/2111.09543)
 
 ## News
+### 03/18/2023
+- The code for DeBERTaV3 pre-training and continous training is added. Please check [Document](experiments/language_model) for details.
+
 ### 12/8/2021
 - [DeBERTa-V3-XSmall](https://huggingface.co/microsoft/deberta-v3-xsmall) is added. With only **22M** backbone parameters which is only 1/4 of RoBERTa-Base and XLNet-Base, DeBERTa-V3-XSmall significantly outperforms the later on MNLI and SQuAD v2.0 tasks (i.e. 1.2% on MNLI-m, 1.5% EM score on SQuAD v2.0). This further demonstrates the efficiency of DeBERTaV3 models.
 

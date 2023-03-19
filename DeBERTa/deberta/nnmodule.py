@@ -52,6 +52,9 @@ class NNModule(nn.Module):
     if isinstance(module, nn.Linear) and module.bias is not None:
       module.bias.data.zero_()
 
+  def export_onnx(self, onnx_path, input):
+    raise NotImplementedError
+
   @classmethod
   def load_model(cls, model_path, model_config=None, tag=None, no_cache=False, cache_dir=None , *inputs, **kwargs):
     """ Instantiate a sub-class of NNModule from a pre-trained model file.

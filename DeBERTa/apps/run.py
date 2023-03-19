@@ -152,9 +152,21 @@ def calc_metrics(predicts, labels, eval_loss, eval_item, eval_results, args, nam
 def run_eval(args, model, device, eval_data, prefix=None, tag=None, steps=None):
   # Run prediction for full data
   prefix = f'{tag}_{prefix}' if tag is not None else prefix
+  device = torch.device('cpu') if device is None else device
+  if args.export_onnx_model:
+    import onnxruntime as ort
+    from onnxruntime.quantization import quantize_dynamic, QuantType
+    if args.fp16:
+      ort_model = os.path.join(args.output_dir, f'{prefix}_onnx_fp16.bin')
+      ort_model_qt = None
+    else:
+      ort_model = os.path.join(args.output_dir, f'{prefix}_onnx_fp32.bin')
+      ort_model_qt = os.path.join(args.output_dir, f'{prefix}_onnx_qt.bin')
+
   eval_results=OrderedDict()
   eval_metric=0
   no_tqdm = (True if os.getenv('NO_TQDM', '0')!='0' else False) or args.rank>0
+  ort_session = None
   for eval_item in eval_data:
     name = eval_item.name
     eval_sampler = SequentialSampler(len(eval_item.data))
@@ -167,9 +179,38 @@ def run_eval(args, model, device, eval_data, prefix=None, tag=None, steps=None):
     predicts=[]
     labels=[]
     for batch in tqdm(AsyncDataLoader(eval_dataloader), ncols=80, desc='Evaluating: {}'.format(prefix), disable=no_tqdm):
+      _batch = batch.copy()
       batch = batch_to(batch, device)
-      with torch.no_grad():
-        output = model(**batch)
+      if args.export_onnx_model:
+        if ort_session is None:
+          if args.rank < 1:
+            model.export_onnx(ort_model, (batch.copy(),))
+            if ort_model_qt is not None:
+              quantize_dynamic(ort_model, ort_model_qt)
+              ort_model = ort_model_qt
+          if torch.distributed.is_initialized() and torch.distributed.get_world_size()>1:
+            torch.distributed.barrier()
+          sess_opt = ort.SessionOptions()
+          os.environ["ORT_TENSORRT_ENGINE_CACHE_ENABLE"] = "1"
+          os.environ["ORT_TENSORRT_FP16_ENABLE"] = "1" #TRT precision: 1: TRT FP16, 0: TRT FP32
+          ort_session = ort.InferenceSession(ort_model, sess_options=sess_opt, providers=['TensorrtExecutionProvider', 'CUDAExecutionProvider'])
+          numpy_input = {}
+          for k in [p.name for p in ort_session.get_inputs()]:
+            if isinstance(_batch[k], torch.Tensor):
+              numpy_input[k] = _batch[k].cpu().numpy()
+
+          warmup = ort_session.run(None, numpy_input)
+          #cuda_session = ort.InferenceSession(ort_model, sess_options=sess_opt, providers=['CUDAExecutionProvider'])
+          #warmup = cuda_session.run(None, numpy_input)
+        numpy_input = {}
+        for k in [p.name for p in ort_session.get_inputs()]:
+          if isinstance(_batch[k], torch.Tensor):
+            numpy_input[k] = _batch[k].cpu().numpy()
+        output = ort_session.run(None, numpy_input)
+        output = dict([(n.name,torch.tensor(o).to(device)) for n,o in  zip(ort_session.get_outputs(), output)])
+      if ort_session is None:
+        with torch.no_grad():
+          output = model(**batch)
       logits = output['logits'].detach()
       tmp_eval_loss = output['loss'].detach()
       if 'labels' in output:
@@ -415,6 +456,10 @@ def build_argument_parser():
             type=str,
             help="The loss function used to calculate adversarial loss. It can be one of symmetric-kl, kl or mse.")
 
+  parser.add_argument('--export_onnx_model',
+            default=False,
+            type=boolean_string,
+            help="Whether to export model to ONNX format.")
 
   return parser
 
