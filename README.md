@@ -4,6 +4,7 @@ This repository is the official implementation of [ **DeBERTa**: **D**ecoding-**
 
 ## News
 ### 03/18/2023
+- [DeBERTaV3](https://openreview.net/forum?id=sE7-XhLxHA) paper is accepted by ICLR 2023.
 - The code for DeBERTaV3 pre-training and continous training is added. Please check [Document](experiments/language_model) for details.
 
 ### 12/8/2021
