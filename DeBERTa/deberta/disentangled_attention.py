@@ -110,7 +110,8 @@ class DisentangledSelfAttention(nn.Module):
     def disentangled_attention_bias(self, query_layer, key_layer, relative_pos, rel_embeddings, scale_factor):
         if relative_pos is None:
             q = query_layer.size(-2)
-            relative_pos = build_relative_position(q, key_layer.size(-2), bucket_size = self.position_buckets, max_position = self.max_relative_positions)
+            relative_pos = build_relative_position(q, key_layer.size(-2), bucket_size = self.position_buckets, \
+                max_position = self.max_relative_positions, device=query_layer.device)
         if relative_pos.dim()==2:
             relative_pos = relative_pos.unsqueeze(0).unsqueeze(0)
         elif relative_pos.dim()==3:
@@ -141,28 +142,17 @@ class DisentangledSelfAttention(nn.Module):
         if 'c2p' in self.pos_att_type:
             scale = 1/math.sqrt(pos_key_layer.size(-1)*scale_factor)
             c2p_att = torch.bmm(query_layer, pos_key_layer.transpose(-1, -2).to(query_layer)*scale)
-            c2p_pos = torch.clamp(relative_pos + att_span, 0, att_span*2-1)
-            c2p_att = torch.gather(c2p_att, dim=-1, index=c2p_pos.squeeze(0).expand([query_layer.size(0), query_layer.size(1), relative_pos.size(-1)]))
+            c2p_pos = torch.clamp(relative_pos + att_span, 0, att_span*2-1).squeeze(0).expand([query_layer.size(0), query_layer.size(1), relative_pos.size(-1)])
+            c2p_att = torch.gather(c2p_att, dim=-1, index=c2p_pos)
             score += c2p_att
 
         # position->content
         if 'p2c' in self.pos_att_type or 'p2p' in self.pos_att_type:
             scale = 1/math.sqrt(pos_query_layer.size(-1)*scale_factor)
-            if key_layer.size(-2) != query_layer.size(-2):
-                r_pos = build_relative_position(key_layer.size(-2), key_layer.size(-2), bucket_size = self.position_buckets, max_position = self.max_relative_positions).to(query_layer.device)
-                r_pos = r_pos.unsqueeze(0)
-            else:
-                r_pos = relative_pos
-
-            p2c_pos = torch.clamp(-r_pos + att_span, 0, att_span*2-1)
-            if query_layer.size(-2) != key_layer.size(-2):
-                pos_index = relative_pos[:, :, :, 0].unsqueeze(-1)
 
         if 'p2c' in self.pos_att_type:
-            p2c_att = torch.bmm(key_layer, pos_query_layer.transpose(-1, -2).to(key_layer)*scale)
-            p2c_att = torch.gather(p2c_att, dim=-1, index=p2c_pos.squeeze(0).expand([query_layer.size(0), key_layer.size(-2), key_layer.size(-2)])).transpose(-1,-2)
-            if query_layer.size(-2) != key_layer.size(-2):
-                p2c_att = torch.gather(p2c_att, dim=-2, index=pos_index.expand(p2c_att.size()[:2] + (pos_index.size(-2), key_layer.size(-2))))
+            p2c_att = torch.bmm(pos_query_layer.to(key_layer)*scale, key_layer.transpose(-1, -2))
+            p2c_att = torch.gather(p2c_att, dim=-2, index=c2p_pos)
             score += p2c_att
 
         # position->position

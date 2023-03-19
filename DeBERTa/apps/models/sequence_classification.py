@@ -48,7 +48,7 @@ class SequenceClassificationModel(NNModule):
     pooled_output = self.pooler(encoder_layers[-1])
     pooled_output = self.dropout(pooled_output)
     logits = self.classifier(pooled_output)
-    loss = 0
+    loss = torch.tensor(0).to(logits)
     if labels is not None:
       if self.num_labels ==1:
         # regression task
@@ -74,7 +74,17 @@ class SequenceClassificationModel(NNModule):
             'logits' : logits,
             'loss' : loss
           }
-    return (logits,loss)
+
+  def export_onnx(self, onnx_path, input):
+    del input[0]['labels'] #= input[0]['labels'].unsqueeze(1)
+    torch.onnx.export(self, input, onnx_path, opset_version=13, do_constant_folding=False, \
+        input_names=['input_ids', 'type_ids', 'input_mask', 'position_ids', 'labels'], output_names=['logits', 'loss'], \
+        dynamic_axes={'input_ids' : {0 : 'batch_size', 1: 'sequence_length'}, \
+          'type_ids' : {0 : 'batch_size', 1: 'sequence_length'}, \
+          'input_mask' : {0 : 'batch_size', 1: 'sequence_length'}, \
+          'position_ids' : {0 : 'batch_size', 1: 'sequence_length'}, \
+     #     'labels' : {0 : 'batch_size', 1: 'sequence_length'}, \
+          })
 
   def _pre_load_hook(self, state_dict, prefix, local_metadata, strict,
       missing_keys, unexpected_keys, error_msgs):

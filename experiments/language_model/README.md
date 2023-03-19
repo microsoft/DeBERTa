@@ -14,7 +14,25 @@ Run  `mlm.sh` to train a bert like model which uses MLM as the pre-training task
 
 ## Pre-training with Replaced Token Detection task
 
-Coming soon...
+Run `rtd.sh` to train a ELECTRA like model using RTD as the pre-training task. For example,
+
+`rtd.sh deberta-v3-xsmall` will train a DeBERTaV3 XSmall model with 9M backbone parameters(12 layers, 256 hidden size) plus 32M embedding parameters(128k vocabulary size)
+
+`rtd.sh deberta-v3-base` will train a DeBERTaV3 Base model with 81M backbone parameters(12 layers, 768 hidden size) plus 96M embedding parameters(128k vocabulary size)
+
+`rtd.sh deberta-v3-large` will train a DeBERTaV3 Large model with 288M backbone parameters(24 layers, 1024 hidden size) plus 128M embedding parameters(128k vocabulary size)
+
+## Continuously training with Replaced Token Detection task
+
+Run `rtd.sh` to continuously train a RTD model from pre-trained DeBERTa V3 model. 
+
+Run `rtd.sh deberta-v3-xsmall-continue` to continuously train DeBERTaV3-XSmall model with pre-trained XSmall checkpoint. Please check the script to specify initialization models of generator and discriminator.
+
+|Model| Generator | Discriminator|
+|-----|-----------|--------------|
+|DeBERTa-V3-XSmall|[Public](https://huggingface.co/microsoft/deberta-v3-xsmall/resolve/main/pytorch_model.generator.bin)     |[Public](https://huggingface.co/microsoft/deberta-v3-xsmall/resolve/main/pytorch_model.bin) |
+|DeBERTa-V3-Small|[Public](https://huggingface.co/microsoft/deberta-v3-small/resolve/main/pytorch_model.generator.bin)     |[Public](https://huggingface.co/microsoft/deberta-v3-small/resolve/main/pytorch_model.bin) |
+|DeBERTa-V3-Large|[Public](https://huggingface.co/microsoft/deberta-v3-large/resolve/main/pytorch_model.generator.bin)     |[Public](https://huggingface.co/microsoft/deberta-v3-large/resolve/main/pytorch_model.bin) |
 
 ## Distributed training
 
@@ -49,6 +67,11 @@ For example, to run train a model with 2 nodes,
  ```
 
 ## Model config options
+
+- `embedding_sharing` The embedding sharing method
+	- **GDES** Gradient Disentangled Embedding Sharing
+	- **ES**  Embedding Sharing
+	- **NES** No Embedding Sharing
 
 - `relative_attention` Whether to used relative attention
 

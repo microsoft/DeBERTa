@@ -66,7 +66,10 @@ class XSoftmax(torch.autograd.Function):
     """
 
     output, = self.saved_tensors
-    inputGrad = _softmax_backward_data(grad_output, output, self.dim, output)
+    if version.Version(torch.__version__) >= version.Version('1.11.0a'):
+      inputGrad = _softmax_backward_data(grad_output, output, self.dim, output.dtype)
+    else:
+      inputGrad = _softmax_backward_data(grad_output, output, self.dim, output)
     return inputGrad, None, None
 
   @staticmethod

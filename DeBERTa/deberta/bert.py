@@ -172,7 +172,8 @@ class BertEncoder(nn.Module):
   def get_rel_pos(self, hidden_states, query_states=None, relative_pos=None):
     if self.relative_attention and relative_pos is None:
       q = query_states.size(-2) if query_states is not None else hidden_states.size(-2)
-      relative_pos = build_relative_position(q, hidden_states.size(-2), bucket_size = self.position_buckets, max_position=self.max_relative_positions)
+      relative_pos = build_relative_position(q, hidden_states.size(-2), bucket_size = self.position_buckets, \
+          max_position=self.max_relative_positions, device = hidden_states.device)
     return relative_pos
 
   def forward(self, hidden_states, attention_mask, output_all_encoded_layers=True, return_att=False, query_states = None, relative_pos=None):
