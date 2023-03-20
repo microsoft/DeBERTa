@@ -22,11 +22,10 @@ Run `rtd.sh` to train a ELECTRA like model using RTD as the pre-training task. F
 
 `rtd.sh deberta-v3-large` will train a DeBERTaV3 Large model with 288M backbone parameters(24 layers, 1024 hidden size) plus 128M embedding parameters(128k vocabulary size)
 
-## Continuously training with Replaced Token Detection task
-
-Run `rtd.sh` to continuously train a RTD model from pre-trained DeBERTa V3 model. 
+## Continuously training with Replaced Token Detection
 
 Run `rtd.sh deberta-v3-X-continue` to continuously train DeBERTaV3-X models with following checkpoints. 
+
 Please check the script to specify initialization models of generator and discriminator.
 
 |Model| Generator | Discriminator|
