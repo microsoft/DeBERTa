@@ -26,7 +26,8 @@ Run `rtd.sh` to train a ELECTRA like model using RTD as the pre-training task. F
 
 Run `rtd.sh` to continuously train a RTD model from pre-trained DeBERTa V3 model. 
 
-Run `rtd.sh deberta-v3-xsmall-continue` to continuously train DeBERTaV3-XSmall model with pre-trained XSmall checkpoint. Please check the script to specify initialization models of generator and discriminator.
+Run `rtd.sh deberta-v3-X-continue` to continuously train DeBERTaV3-X models with following checkpoints. 
+Please check the script to specify initialization models of generator and discriminator.
 
 |Model| Generator | Discriminator|
 |-----|-----------|--------------|
