@@ -30,9 +30,9 @@ Please check the script to specify initialization models of generator and discri
 
 |Model| Generator | Discriminator|
 |-----|-----------|--------------|
-|DeBERTa-V3-XSmall|[Public](https://huggingface.co/microsoft/deberta-v3-xsmall/resolve/main/pytorch_model.generator.bin)     |[Public](https://huggingface.co/microsoft/deberta-v3-xsmall/resolve/main/pytorch_model.bin) |
-|DeBERTa-V3-Small|[Public](https://huggingface.co/microsoft/deberta-v3-small/resolve/main/pytorch_model.generator.bin)     |[Public](https://huggingface.co/microsoft/deberta-v3-small/resolve/main/pytorch_model.bin) |
-|DeBERTa-V3-Large|[Public](https://huggingface.co/microsoft/deberta-v3-large/resolve/main/pytorch_model.generator.bin)     |[Public](https://huggingface.co/microsoft/deberta-v3-large/resolve/main/pytorch_model.bin) |
+|DeBERTa-V3-XSmall|[Hugging Face](https://huggingface.co/microsoft/deberta-v3-xsmall/resolve/main/pytorch_model.generator.bin)     |[Hugging Face](https://huggingface.co/microsoft/deberta-v3-xsmall/resolve/main/pytorch_model.bin) |
+|DeBERTa-V3-Small|[Hugging Face](https://huggingface.co/microsoft/deberta-v3-small/resolve/main/pytorch_model.generator.bin)     |[Hugging Face](https://huggingface.co/microsoft/deberta-v3-small/resolve/main/pytorch_model.bin) |
+|DeBERTa-V3-Large|[Hugging Face](https://huggingface.co/microsoft/deberta-v3-large/resolve/main/pytorch_model.generator.bin)     |[Hugging Face](https://huggingface.co/microsoft/deberta-v3-large/resolve/main/pytorch_model.bin) |
 
 ## Distributed training
 
