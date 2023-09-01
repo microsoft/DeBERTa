@@ -4,7 +4,7 @@ numpy
 pytest
 regex
 scipy
-sklearn
+scikit-learn
 tqdm
 ujson
 seqeval
